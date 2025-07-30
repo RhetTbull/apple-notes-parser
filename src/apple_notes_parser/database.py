@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-import sqlite3
 import gzip
 import os
-from pathlib import Path
+import sqlite3
 from datetime import datetime
+from pathlib import Path
 
-from .exceptions import DatabaseError
-from .models import Account, Folder, Note, Attachment
-from .protobuf_parser import ProtobufParser
 from .embedded_objects import EmbeddedObjectExtractor
+from .exceptions import DatabaseError
+from .models import Account, Attachment, Folder, Note
+from .protobuf_parser import ProtobufParser
 
 
 class AppleNotesDatabase:
@@ -19,14 +19,17 @@ class AppleNotesDatabase:
 
     def __init__(self, database_path: str | None = None):
         """Initialize with path to Notes SQLite database.
-        
+
         Args:
             database_path: Path to NoteStore.sqlite. If None, tries to find the default
-                          macOS location in ~/Library/Group Containers/
+                          macOS location in ~/Library/Group Containers/.
+
+        Raises:
+            DatabaseError: If the database file is not found.
         """
         if database_path is None:
             database_path = self._find_default_database_path()
-        
+
         self.database_path = Path(database_path)
         if not self.database_path.exists():
             raise DatabaseError(f"Database file not found: {database_path}")
@@ -34,25 +37,53 @@ class AppleNotesDatabase:
         self.connection: sqlite3.Connection | None = None
         self._ios_version: int | None = None
         self._embedded_extractor: EmbeddedObjectExtractor | None = None
-    
+
     def _find_default_database_path(self) -> str:
-        """Find the default Apple Notes database path on macOS."""
+        """Find the default Apple Notes database path on macOS.
+
+        Searches common macOS Notes database locations in order of preference.
+
+        Returns:
+            str: Path to the found database file.
+
+        Raises:
+            DatabaseError: If no database file is found in any of the searched locations.
+        """
         home = Path.home()
-        
+
         # Common macOS Notes database locations
         possible_paths = [
             # Modern macOS (10.15+)
-            home / "Library" / "Group Containers" / "group.com.apple.notes" / "NoteStore.sqlite",
+            home
+            / "Library"
+            / "Group Containers"
+            / "group.com.apple.notes"
+            / "NoteStore.sqlite",
             # Alternative location
-            home / "Library" / "Containers" / "com.apple.Notes" / "Data" / "Library" / "Notes" / "NotesV7.storedata",
+            home
+            / "Library"
+            / "Containers"
+            / "com.apple.Notes"
+            / "Data"
+            / "Library"
+            / "Notes"
+            / "NotesV7.storedata",
             # Older locations (for completeness)
-            home / "Library" / "Containers" / "com.apple.Notes" / "Data" / "Library" / "CoreData" / "ExternalRecords" / "NoteStore.sqlite",
+            home
+            / "Library"
+            / "Containers"
+            / "com.apple.Notes"
+            / "Data"
+            / "Library"
+            / "CoreData"
+            / "ExternalRecords"
+            / "NoteStore.sqlite",
         ]
-        
+
         for path in possible_paths:
             if path.exists():
                 return str(path)
-        
+
         # If no default found, raise an error with helpful message
         raise DatabaseError(
             "Could not find Apple Notes database. Please provide the path explicitly. "
@@ -60,39 +91,68 @@ class AppleNotesDatabase:
         )
 
     def __enter__(self):
-        """Context manager entry."""
+        """Context manager entry.
+
+        Returns:
+            AppleNotesDatabase: Self instance for use in with statement.
+        """
         self.connect()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit."""
+        """Context manager exit.
+
+        Args:
+            exc_type: Exception type if an exception occurred.
+            exc_val: Exception value if an exception occurred.
+            exc_tb: Exception traceback if an exception occurred.
+        """
         self.close()
 
     def connect(self):
-        """Connect to the SQLite database."""
+        """Connect to the SQLite database.
+
+        Establishes connection and initializes embedded object extractor.
+
+        Raises:
+            DatabaseError: If connection to the database fails.
+        """
         try:
             self.connection = sqlite3.connect(str(self.database_path))
             self.connection.row_factory = sqlite3.Row
 
             # Initialize embedded object extractor once we have connection and version
             ios_version = self.get_ios_version()
-            self._embedded_extractor = EmbeddedObjectExtractor(self.connection, ios_version)
+            self._embedded_extractor = EmbeddedObjectExtractor(
+                self.connection, ios_version
+            )
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to connect to database: {e}")
 
     def close(self):
-        """Close database connection."""
+        """Close database connection.
+
+        Safely closes the SQLite connection if it exists.
+        """
         if self.connection:
             self.connection.close()
             self.connection = None
 
     def _ensure_connected(self):
-        """Ensure database connection exists."""
+        """Ensure database connection exists.
+
+        Creates a new connection if one doesn't already exist.
+        """
         if not self.connection:
             self.connect()
 
     def get_z_uuid(self) -> str | None:
-        """Get the Z_UUID from Z_METADATA table for constructing AppleScript IDs."""
+        """Get the Z_UUID from Z_METADATA table for constructing AppleScript IDs.
+
+        Returns:
+            str | None: The Z_UUID string if found, None if the table doesn't exist
+                       or no UUID is found.
+        """
         self._ensure_connected()
         cursor = self.connection.cursor()
 
@@ -105,7 +165,17 @@ class AppleNotesDatabase:
             return None
 
     def get_ios_version(self) -> int:
-        """Detect iOS version based on database schema."""
+        """Detect iOS version based on database schema.
+
+        Analyzes the database schema to determine which iOS/macOS version
+        created the database by checking for version-specific columns.
+
+        Returns:
+            int: Detected iOS/macOS version number (e.g., 15, 16, 17, 18).
+
+        Raises:
+            DatabaseError: If version detection fails due to database access issues.
+        """
         if self._ios_version is not None:
             return self._ios_version
 
@@ -133,7 +203,9 @@ class AppleNotesDatabase:
                 self._ios_version = 12
             else:
                 # Check for iOS 11 specific table
-                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='Z_11NOTES'")
+                cursor.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name='Z_11NOTES'"
+                )
                 if cursor.fetchone():
                     self._ios_version = 11
                 else:
@@ -145,7 +217,17 @@ class AppleNotesDatabase:
             raise DatabaseError(f"Failed to detect iOS version: {e}")
 
     def get_accounts(self) -> list[Account]:
-        """Get all accounts from the database."""
+        """Get all accounts from the database.
+
+        Retrieves all Apple Notes accounts (e.g., iCloud, On My Mac) from the database.
+        The query structure varies based on the detected iOS version.
+
+        Returns:
+            list[Account]: List of Account objects representing all accounts in the database.
+
+        Raises:
+            DatabaseError: If account retrieval fails due to database access issues.
+        """
         self._ensure_connected()
         cursor = self.connection.cursor()
 
@@ -173,7 +255,7 @@ class AppleNotesDatabase:
                     id=row[0],
                     name=row[1] or "Unknown",
                     identifier=row[2] or "",
-                    user_record_name=row[3] if len(row) > 3 else None
+                    user_record_name=row[3] if len(row) > 3 else None,
                 )
                 accounts.append(account)
 
@@ -183,7 +265,21 @@ class AppleNotesDatabase:
             raise DatabaseError(f"Failed to get accounts: {e}")
 
     def get_folders(self, accounts: dict[int, Account]) -> list[Folder]:
-        """Get all folders from the database."""
+        """Get all folders from the database.
+
+        Retrieves all Apple Notes folders and constructs their hierarchy relationships.
+        Only folders belonging to the provided accounts are included.
+
+        Args:
+            accounts: Dictionary mapping account IDs to Account objects.
+                     Only folders belonging to these accounts will be returned.
+
+        Returns:
+            list[Folder]: List of Folder objects representing all folders in the database.
+
+        Raises:
+            DatabaseError: If folder retrieval fails due to database access issues.
+        """
         self._ensure_connected()
         cursor = self.connection.cursor()
 
@@ -213,7 +309,7 @@ class AppleNotesDatabase:
                         name=row[1] or "Untitled Folder",
                         account=accounts[account_id],
                         uuid=row[3] if row[3] else None,
-                        parent_id=row[4] if len(row) > 4 and row[4] else None
+                        parent_id=row[4] if len(row) > 4 and row[4] else None,
                     )
                     folders.append(folder)
 
@@ -223,7 +319,22 @@ class AppleNotesDatabase:
             raise DatabaseError(f"Failed to get folders: {e}")
 
     def get_attachments(self, accounts: dict[int, Account]) -> list[Attachment]:
-        """Get all attachments from the database."""
+        """Get all attachments from the database.
+
+        Retrieves all file attachments associated with notes in the database.
+        Attachments are stored as ZICCLOUDSYNCINGOBJECT records with ZNOTE
+        pointing to the parent note.
+
+        Args:
+            accounts: Dictionary mapping account IDs to Account objects.
+                     Used for consistency with other methods (attachments are note-scoped).
+
+        Returns:
+            list[Attachment]: List of Attachment objects representing all attachments.
+
+        Raises:
+            DatabaseError: If attachment retrieval fails due to database access issues.
+        """
         self._ensure_connected()
         cursor = self.connection.cursor()
 
@@ -269,7 +380,7 @@ class AppleNotesDatabase:
                     modification_date=modification_date,
                     uuid=row[7],
                     is_remote=row[8] is not None,
-                    remote_url=row[8]
+                    remote_url=row[8],
                 )
                 attachments.append(attachment)
 
@@ -278,15 +389,34 @@ class AppleNotesDatabase:
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to get attachments: {e}")
 
-    def get_notes(self, accounts: dict[int, Account], folders: dict[int, Folder]) -> list[Note]:
-        """Get all notes from the database."""
+    def get_notes(
+        self, accounts: dict[int, Account], folders: dict[int, Folder]
+    ) -> list[Note]:
+        """Get all notes from the database.
+
+        Retrieves all Apple Notes from the database, including their content,
+        metadata, embedded objects (hashtags, mentions, links), and attachments.
+        Only notes belonging to the provided accounts and folders are included.
+
+        Args:
+            accounts: Dictionary mapping account IDs to Account objects.
+                     Only notes belonging to these accounts will be returned.
+            folders: Dictionary mapping folder IDs to Folder objects.
+                    Only notes in these folders will be returned.
+
+        Returns:
+            list[Note]: List of Note objects representing all notes in the database.
+
+        Raises:
+            DatabaseError: If note retrieval fails due to database access issues.
+        """
         self._ensure_connected()
         cursor = self.connection.cursor()
 
         try:
             ios_version = self.get_ios_version()
             z_uuid = self.get_z_uuid()  # Get Z_UUID for AppleScript ID construction
-            
+
             # Get all attachments first and organize by note_id
             attachments_list = self.get_attachments(accounts)
             attachments_by_note = {}
@@ -346,26 +476,30 @@ class AppleNotesDatabase:
                     structure = ProtobufParser.parse_note_structure(row[3])
 
                     # Extract embedded objects (hashtags, mentions, links) from database
-                    embedded_objects = self._embedded_extractor.get_embedded_objects_for_note(row[1])
+                    embedded_objects = (
+                        self._embedded_extractor.get_embedded_objects_for_note(row[1])
+                    )
 
                     # Combine hashtags from both protobuf content and embedded objects
                     # Embedded objects are more reliable for iOS 15+
-                    hashtags = embedded_objects.get('hashtags', [])
+                    hashtags = embedded_objects.get("hashtags", [])
                     if not hashtags:
                         # Fallback to regex extraction for older versions or when embedded objects aren't found
-                        hashtags = structure.get('hashtags', [])
+                        hashtags = structure.get("hashtags", [])
 
-                    mentions = embedded_objects.get('mentions', [])
+                    mentions = embedded_objects.get("mentions", [])
                     if not mentions:
-                        mentions = structure.get('mentions', [])
+                        mentions = structure.get("mentions", [])
 
-                    links = embedded_objects.get('links', [])
+                    links = embedded_objects.get("links", [])
                     if not links:
-                        links = structure.get('links', [])
+                        links = structure.get("links", [])
 
                     # Convert Core Data timestamps to datetime
                     creation_date = self._convert_core_time(row[4]) if row[4] else None
-                    modification_date = self._convert_core_time(row[5]) if row[5] else None
+                    modification_date = (
+                        self._convert_core_time(row[5]) if row[5] else None
+                    )
 
                     # Construct AppleScript ID: x-coredata://{Z_UUID}/ICNote/p{Z_PK}
                     applescript_id = None
@@ -387,11 +521,13 @@ class AppleNotesDatabase:
                         is_pinned=bool(row[8]) if row[8] is not None else False,
                         uuid=row[9],
                         applescript_id=applescript_id,
-                        is_password_protected=bool(row[10]) if row[10] is not None else False,
+                        is_password_protected=(
+                            bool(row[10]) if row[10] is not None else False
+                        ),
                         tags=hashtags,
                         mentions=mentions,
                         links=links,
-                        attachments=note_attachments
+                        attachments=note_attachments,
                     )
                     notes.append(note)
 
@@ -400,8 +536,22 @@ class AppleNotesDatabase:
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to get notes: {e}")
 
-    def _get_legacy_notes(self, accounts: dict[int, Account], folders: dict[int, Folder]) -> list[Note]:
-        """Get notes from legacy (pre-iOS 9) database format."""
+    def _get_legacy_notes(
+        self, accounts: dict[int, Account], folders: dict[int, Folder]
+    ) -> list[Note]:
+        """Get notes from legacy (pre-iOS 9) database format.
+
+        Handles the older database schema used in iOS 8 and earlier versions
+        where notes were stored in ZNOTE/ZNOTEBODY tables instead of the
+        modern ZICCLOUDSYNCINGOBJECT structure.
+
+        Args:
+            accounts: Dictionary mapping account IDs to Account objects.
+            folders: Dictionary mapping folder IDs to Folder objects.
+
+        Returns:
+            list[Note]: List of Note objects from the legacy database format.
+        """
         cursor = self.connection.cursor()
         z_uuid = self.get_z_uuid()  # Get Z_UUID for AppleScript ID construction
 
@@ -451,20 +601,30 @@ class AppleNotesDatabase:
                     is_pinned=False,
                     uuid=row[9] if row[9] else None,
                     applescript_id=applescript_id,
-                    is_password_protected=False
+                    is_password_protected=False,
                 )
                 notes.append(note)
 
         return notes
 
     def _extract_note_content(self, zdata: bytes) -> str | None:
-        """Extract plain text content from compressed note data."""
+        """Extract plain text content from compressed note data.
+
+        Legacy method for extracting note content. Modern note parsing
+        is handled by the ProtobufParser class.
+
+        Args:
+            zdata: Raw bytes from the ZDATA column in the database.
+
+        Returns:
+            str | None: Extracted text content or None if extraction fails.
+        """
         if not zdata:
             return None
 
         try:
             # Check if data is gzipped
-            if len(zdata) > 2 and zdata[0:2] == b'\x1f\x8b':
+            if len(zdata) > 2 and zdata[0:2] == b"\x1f\x8b":
                 # Decompress gzipped data
                 decompressed = gzip.decompress(zdata)
                 # For now, return a placeholder - we'll implement protobuf parsing later
@@ -472,14 +632,25 @@ class AppleNotesDatabase:
             else:
                 # Try to decode as plain text
                 try:
-                    return zdata.decode('utf-8', errors='ignore')
+                    return zdata.decode("utf-8", errors="ignore")
                 except:
                     return f"[Binary note data - {len(zdata)} bytes]"
         except Exception:
             return None
 
     def _convert_core_time(self, core_time: float) -> datetime:
-        """Convert Core Data timestamp to Python datetime."""
+        """Convert Core Data timestamp to Python datetime.
+
+        Core Data timestamps are seconds since January 1, 2001 00:00:00 UTC.
+        Unix timestamps are seconds since January 1, 1970 00:00:00 UTC.
+        The difference is 978307200 seconds (31 years).
+
+        Args:
+            core_time: Core Data timestamp as a float.
+
+        Returns:
+            datetime: Converted datetime object in local timezone.
+        """
         # Core Data timestamps are seconds since January 1, 2001 00:00:00 UTC
         # Unix timestamps are seconds since January 1, 1970 00:00:00 UTC
         # The difference is 978307200 seconds (31 years)

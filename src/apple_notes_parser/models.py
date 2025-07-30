@@ -2,71 +2,105 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
-import re
 
 
 @dataclass
 class Account:
     """Represents an Apple Notes account."""
+
     id: int
     name: str
     identifier: str
     user_record_name: str | None = None
-    
+
     def __str__(self) -> str:
+        """Return string representation of Account.
+
+        Returns:
+            str: Formatted string containing account ID and name.
+        """
         return f"Account(id={self.id}, name='{self.name}')"
 
 
 @dataclass
 class Folder:
     """Represents an Apple Notes folder."""
+
     id: int
     name: str
     account: Account
     uuid: str | None = None
     parent_id: int | None = None
-    
+
     def get_path(self, folders_dict: dict[int, Folder] | None = None) -> str:
-        """Get the full path of this folder (e.g., 'Notes/Cocktails/Classic')."""
+        """Get the full path of this folder (e.g., 'Notes/Cocktails/Classic').
+
+        Args:
+            folders_dict: Dictionary mapping folder IDs to Folder objects for hierarchy traversal.
+                         If None, returns just the folder name.
+
+        Returns:
+            str: Full folder path from root to this folder, separated by '/'.
+        """
         if not folders_dict:
             return self.name
-        
+
         path_parts = []
         current_folder = self
         visited = set()  # Prevent infinite loops
-        
+
         while current_folder and current_folder.id not in visited:
             visited.add(current_folder.id)
             path_parts.append(current_folder.name)
-            
+
             if current_folder.parent_id and current_folder.parent_id in folders_dict:
                 current_folder = folders_dict[current_folder.parent_id]
             else:
                 break
-        
+
         # Reverse to get root-to-leaf order
         path_parts.reverse()
         return "/".join(path_parts)
-    
+
     def get_parent(self, folders_dict: dict[int, Folder]) -> Folder | None:
-        """Get the parent folder object."""
+        """Get the parent folder object.
+
+        Args:
+            folders_dict: Dictionary mapping folder IDs to Folder objects.
+
+        Returns:
+            Folder | None: Parent folder object if exists, None otherwise.
+        """
         if self.parent_id and self.parent_id in folders_dict:
             return folders_dict[self.parent_id]
         return None
-    
+
     def is_root(self) -> bool:
-        """Check if this is a root folder (no parent)."""
+        """Check if this is a root folder (no parent).
+
+        Returns:
+            bool: True if this folder has no parent, False otherwise.
+        """
         return self.parent_id is None
-    
+
     def __str__(self) -> str:
-        return f"Folder(id={self.id}, name='{self.name}', account='{self.account.name}')"
+        """Return string representation of Folder.
+
+        Returns:
+            str: Formatted string containing folder ID, name, and account name.
+        """
+        return (
+            f"Folder(id={self.id}, name='{self.name}', account='{self.account.name}')"
+        )
 
 
 @dataclass
 class Attachment:
     """Represents an Apple Notes attachment."""
+
     id: int
     filename: str | None
     file_size: int | None
@@ -77,63 +111,103 @@ class Attachment:
     uuid: str | None = None
     is_remote: bool = False
     remote_url: str | None = None
-    
+
     @property
     def file_extension(self) -> str | None:
-        """Get file extension from filename."""
-        if self.filename and '.' in self.filename:
-            return self.filename.split('.')[-1].lower()
+        """Get file extension from filename.
+
+        Returns:
+            str | None: File extension in lowercase (e.g., 'pdf', 'jpg') or None if no extension.
+        """
+        if self.filename and "." in self.filename:
+            return self.filename.split(".")[-1].lower()
         return None
-    
+
     @property
     def mime_type(self) -> str | None:
-        """Get MIME type from UTI."""
+        """Get MIME type from UTI.
+
+        Returns:
+            str | None: MIME type string (e.g., 'application/pdf', 'image/jpeg') or None if unknown.
+        """
         uti_to_mime = {
-            'com.adobe.pdf': 'application/pdf',
-            'public.jpeg': 'image/jpeg',
-            'public.png': 'image/png',
-            'public.tiff': 'image/tiff', 
-            'public.heic': 'image/heic',
-            'public.mp4': 'video/mp4',
-            'public.mov': 'video/quicktime',
-            'public.mp3': 'audio/mpeg',
-            'public.m4a': 'audio/mp4',
-            'public.plain-text': 'text/plain',
-            'public.rtf': 'text/rtf',
-            'com.microsoft.word.doc': 'application/msword',
-            'org.openxmlformats.wordprocessingml.document': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            "com.adobe.pdf": "application/pdf",
+            "public.jpeg": "image/jpeg",
+            "public.png": "image/png",
+            "public.tiff": "image/tiff",
+            "public.heic": "image/heic",
+            "public.mp4": "video/mp4",
+            "public.mov": "video/quicktime",
+            "public.mp3": "audio/mpeg",
+            "public.m4a": "audio/mp4",
+            "public.plain-text": "text/plain",
+            "public.rtf": "text/rtf",
+            "com.microsoft.word.doc": "application/msword",
+            "org.openxmlformats.wordprocessingml.document": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         }
         return uti_to_mime.get(self.type_uti) if self.type_uti else None
-    
+
     @property
     def is_image(self) -> bool:
-        """Check if attachment is an image."""
+        """Check if attachment is an image.
+
+        Returns:
+            bool: True if attachment is an image file (jpeg, png, tiff, heic, gif), False otherwise.
+        """
         if self.type_uti:
-            return self.type_uti.startswith('public.') and any(img_type in self.type_uti for img_type in ['jpeg', 'png', 'tiff', 'heic', 'gif'])
+            return self.type_uti.startswith("public.") and any(
+                img_type in self.type_uti
+                for img_type in ["jpeg", "png", "tiff", "heic", "gif"]
+            )
         return False
-    
+
     @property
     def is_video(self) -> bool:
-        """Check if attachment is a video."""
+        """Check if attachment is a video.
+
+        Returns:
+            bool: True if attachment is a video file (mp4, mov, avi, quicktime), False otherwise.
+        """
         if self.type_uti:
-            return any(vid_type in self.type_uti for vid_type in ['mp4', 'mov', 'avi', 'quicktime'])
+            return any(
+                vid_type in self.type_uti
+                for vid_type in ["mp4", "mov", "avi", "quicktime"]
+            )
         return False
-    
+
     @property
     def is_audio(self) -> bool:
-        """Check if attachment is audio."""
+        """Check if attachment is audio.
+
+        Returns:
+            bool: True if attachment is an audio file (mp3, m4a, wav, aiff), False otherwise.
+        """
         if self.type_uti:
-            return any(aud_type in self.type_uti for aud_type in ['mp3', 'm4a', 'wav', 'aiff'])
+            return any(
+                aud_type in self.type_uti for aud_type in ["mp3", "m4a", "wav", "aiff"]
+            )
         return False
-    
-    @property  
+
+    @property
     def is_document(self) -> bool:
-        """Check if attachment is a document."""
+        """Check if attachment is a document.
+
+        Returns:
+            bool: True if attachment is a document file (pdf, doc, docx, rtf, txt, pages), False otherwise.
+        """
         if self.type_uti:
-            return any(doc_type in self.type_uti for doc_type in ['pdf', 'doc', 'docx', 'rtf', 'txt', 'pages'])
+            return any(
+                doc_type in self.type_uti
+                for doc_type in ["pdf", "doc", "docx", "rtf", "txt", "pages"]
+            )
         return False
-    
+
     def __str__(self) -> str:
+        """Return string representation of Attachment.
+
+        Returns:
+            str: Formatted string containing attachment ID, filename, and optional file size.
+        """
         size_str = f", {self.file_size} bytes" if self.file_size else ""
         return f"Attachment(id={self.id}, filename='{self.filename}'{size_str})"
 
@@ -141,6 +215,7 @@ class Attachment:
 @dataclass
 class Note:
     """Represents an Apple Notes note."""
+
     id: int
     note_id: int
     title: str | None
@@ -157,57 +232,125 @@ class Note:
     mentions: list[str] = field(default_factory=list)
     links: list[str] = field(default_factory=list)
     attachments: list[Attachment] = field(default_factory=list)
-    
+
     def __post_init__(self):
-        """Extract tags from content after initialization."""
+        """Extract tags from content after initialization.
+
+        This method is called automatically after dataclass initialization
+        to perform additional setup tasks.
+        """
         if self.content:
             self._extract_tags()
-    
+
     def _extract_tags(self):
-        """Extract hashtags from note content."""
+        """Extract hashtags from note content.
+
+        Note:
+            This method is kept for compatibility but tags are now set
+            by the parser using protobuf data for better accuracy.
+        """
         # Tags will be set by the parser using protobuf data
         # This method is kept for compatibility
         pass
-    
+
     def has_tag(self, tag: str) -> bool:
-        """Check if the note has a specific tag."""
+        """Check if the note has a specific tag.
+
+        Args:
+            tag: Tag to search for (case-insensitive).
+
+        Returns:
+            bool: True if the note contains the specified tag, False otherwise.
+        """
         return tag.lower() in [t.lower() for t in self.tags]
-    
+
     def has_mention(self, mention: str) -> bool:
-        """Check if the note has a specific mention."""
+        """Check if the note has a specific mention.
+
+        Args:
+            mention: Mention to search for (case-insensitive).
+
+        Returns:
+            bool: True if the note contains the specified mention, False otherwise.
+        """
         return mention.lower() in [m.lower() for m in self.mentions]
-    
+
     def has_link(self, link: str) -> bool:
-        """Check if the note contains a specific link."""
+        """Check if the note contains a specific link.
+
+        Args:
+            link: URL to search for.
+
+        Returns:
+            bool: True if the note contains the specified link, False otherwise.
+        """
         return link in self.links
-    
+
     def has_attachments(self) -> bool:
-        """Check if the note has any attachments."""
+        """Check if the note has any attachments.
+
+        Returns:
+            bool: True if the note has one or more attachments, False otherwise.
+        """
         return len(self.attachments) > 0
-    
+
     def get_attachments_by_type(self, attachment_type: str) -> list[Attachment]:
-        """Get attachments of a specific type (image, video, audio, document)."""
+        """Get attachments of a specific type.
+
+        Args:
+            attachment_type: Type of attachments to retrieve. Must be one of:
+                           'image', 'video', 'audio', or 'document'.
+
+        Returns:
+            list[Attachment]: List of attachments matching the specified type.
+        """
         type_filters = {
-            'image': lambda a: a.is_image,
-            'video': lambda a: a.is_video, 
-            'audio': lambda a: a.is_audio,
-            'document': lambda a: a.is_document
+            "image": lambda a: a.is_image,
+            "video": lambda a: a.is_video,
+            "audio": lambda a: a.is_audio,
+            "document": lambda a: a.is_document,
         }
-        
+
         if attachment_type.lower() in type_filters:
-            return [att for att in self.attachments if type_filters[attachment_type.lower()](att)]
+            return [
+                att
+                for att in self.attachments
+                if type_filters[attachment_type.lower()](att)
+            ]
         return []
-    
+
     def get_attachments_by_extension(self, extension: str) -> list[Attachment]:
-        """Get attachments with a specific file extension."""
-        ext = extension.lower().lstrip('.')
+        """Get attachments with a specific file extension.
+
+        Args:
+            extension: File extension to search for (case-insensitive).
+                      Can include or omit the leading dot (e.g., 'pdf' or '.pdf').
+
+        Returns:
+            list[Attachment]: List of attachments with the specified file extension.
+        """
+        ext = extension.lower().lstrip(".")
         return [att for att in self.attachments if att.file_extension == ext]
-    
+
     def get_folder_path(self, folders_dict: dict[int, Folder] | None = None) -> str:
-        """Get the full folder path for this note (e.g., 'Notes/Cocktails/Classic')."""
+        """Get the full folder path for this note.
+
+        Args:
+            folders_dict: Dictionary mapping folder IDs to Folder objects for hierarchy traversal.
+                         If None, returns just the folder name.
+
+        Returns:
+            str: Full folder path from root to containing folder, separated by '/'.
+                Example: 'Notes/Cocktails/Classic'
+        """
         if folders_dict:
             return self.folder.get_path(folders_dict)
         return self.folder.name
-    
+
     def __str__(self) -> str:
+        """Return string representation of Note.
+
+        Returns:
+            str: Formatted string containing note ID, title, and folder name.
+        """
         return f"Note(id={self.id}, title='{self.title}', folder='{self.folder.name}')"
