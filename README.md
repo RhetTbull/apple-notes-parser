@@ -244,11 +244,11 @@ Tags are extracted from note content using regex patterns:
 ### Prerequisites
 
 For using the library (end users), you only need:
-- Python 3.13+
+- Python 3.11+
 - Dependencies are automatically installed via `uv` or `pip`
 
 For development and building, you need:
-- Python 3.13+  
+- Python 3.11+  
 - `uv` package manager (recommended) or `pip`
 - `grpcio-tools` (for protobuf code generation, if needed)
 
@@ -430,7 +430,7 @@ The project uses these key dependencies:
 
 **Test failures:**
 - Ensure you have the real test database in `tests/data/`
-- Check that your Python version is 3.13+
+- Check that your Python version is 3.11+
 - Try running `uv sync --dev` to refresh dependencies
 
 **Import errors:**

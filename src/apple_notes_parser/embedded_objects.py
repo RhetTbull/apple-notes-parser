@@ -1,7 +1,9 @@
 """Embedded objects extraction for Apple Notes."""
 
+from __future__ import annotations
+
 import sqlite3
-from typing import List, Dict, Any, Optional
+from typing import Any
 from .exceptions import DatabaseError
 
 
@@ -18,7 +20,7 @@ class EmbeddedObjectExtractor:
         self.connection = connection
         self.ios_version = ios_version
     
-    def get_embedded_objects_for_note(self, note_id: int) -> Dict[str, List[str]]:
+    def get_embedded_objects_for_note(self, note_id: int) -> dict[str, list[str]]:
         """Get all embedded objects for a specific note."""
         if self.ios_version < 15:
             # Hashtags and mentions were added in iOS 15
@@ -84,7 +86,7 @@ class EmbeddedObjectExtractor:
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to extract embedded objects for note {note_id}: {e}")
     
-    def get_all_hashtags(self) -> List[str]:
+    def get_all_hashtags(self) -> list[str]:
         """Get all unique hashtags across all notes."""
         if self.ios_version < 15:
             return []
@@ -114,7 +116,7 @@ class EmbeddedObjectExtractor:
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to get all hashtags: {e}")
     
-    def get_all_mentions(self) -> List[str]:
+    def get_all_mentions(self) -> list[str]:
         """Get all unique mentions across all notes."""
         if self.ios_version < 15:
             return []
@@ -144,7 +146,7 @@ class EmbeddedObjectExtractor:
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to get all mentions: {e}")
     
-    def get_notes_with_hashtag(self, hashtag: str) -> List[int]:
+    def get_notes_with_hashtag(self, hashtag: str) -> list[int]:
         """Get all note IDs that have a specific hashtag."""
         if self.ios_version < 15:
             return []
@@ -170,7 +172,7 @@ class EmbeddedObjectExtractor:
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to get notes with hashtag '{hashtag}': {e}")
     
-    def get_hashtag_counts(self) -> Dict[str, int]:
+    def get_hashtag_counts(self) -> dict[str, int]:
         """Get count of notes for each hashtag."""
         if self.ios_version < 15:
             return {}

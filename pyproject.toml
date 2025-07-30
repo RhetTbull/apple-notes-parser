@@ -3,7 +3,7 @@ name = "apple-notes-parser"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
     "grpcio-tools>=1.74.0",
     "protobuf>=6.31.1",

@@ -1,10 +1,11 @@
 """SQLite database operations for Apple Notes."""
 
+from __future__ import annotations
+
 import sqlite3
 import gzip
 import os
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 from datetime import datetime
 
 from .exceptions import DatabaseError
@@ -16,7 +17,7 @@ from .embedded_objects import EmbeddedObjectExtractor
 class AppleNotesDatabase:
     """Handles SQLite database operations for Apple Notes."""
 
-    def __init__(self, database_path: Optional[str] = None):
+    def __init__(self, database_path: str | None = None):
         """Initialize with path to Notes SQLite database.
         
         Args:
@@ -30,9 +31,9 @@ class AppleNotesDatabase:
         if not self.database_path.exists():
             raise DatabaseError(f"Database file not found: {database_path}")
 
-        self.connection: Optional[sqlite3.Connection] = None
-        self._ios_version: Optional[int] = None
-        self._embedded_extractor: Optional[EmbeddedObjectExtractor] = None
+        self.connection: sqlite3.Connection | None = None
+        self._ios_version: int | None = None
+        self._embedded_extractor: EmbeddedObjectExtractor | None = None
     
     def _find_default_database_path(self) -> str:
         """Find the default Apple Notes database path on macOS."""
@@ -90,7 +91,7 @@ class AppleNotesDatabase:
         if not self.connection:
             self.connect()
 
-    def get_z_uuid(self) -> Optional[str]:
+    def get_z_uuid(self) -> str | None:
         """Get the Z_UUID from Z_METADATA table for constructing AppleScript IDs."""
         self._ensure_connected()
         cursor = self.connection.cursor()
@@ -143,7 +144,7 @@ class AppleNotesDatabase:
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to detect iOS version: {e}")
 
-    def get_accounts(self) -> List[Account]:
+    def get_accounts(self) -> list[Account]:
         """Get all accounts from the database."""
         self._ensure_connected()
         cursor = self.connection.cursor()
@@ -181,7 +182,7 @@ class AppleNotesDatabase:
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to get accounts: {e}")
 
-    def get_folders(self, accounts: Dict[int, Account]) -> List[Folder]:
+    def get_folders(self, accounts: dict[int, Account]) -> list[Folder]:
         """Get all folders from the database."""
         self._ensure_connected()
         cursor = self.connection.cursor()
@@ -221,7 +222,7 @@ class AppleNotesDatabase:
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to get folders: {e}")
 
-    def get_notes(self, accounts: Dict[int, Account], folders: Dict[int, Folder]) -> List[Note]:
+    def get_notes(self, accounts: dict[int, Account], folders: dict[int, Folder]) -> list[Note]:
         """Get all notes from the database."""
         self._ensure_connected()
         cursor = self.connection.cursor()
@@ -331,7 +332,7 @@ class AppleNotesDatabase:
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to get notes: {e}")
 
-    def _get_legacy_notes(self, accounts: Dict[int, Account], folders: Dict[int, Folder]) -> List[Note]:
+    def _get_legacy_notes(self, accounts: dict[int, Account], folders: dict[int, Folder]) -> list[Note]:
         """Get notes from legacy (pre-iOS 9) database format."""
         cursor = self.connection.cursor()
         z_uuid = self.get_z_uuid()  # Get Z_UUID for AppleScript ID construction
@@ -388,7 +389,7 @@ class AppleNotesDatabase:
 
         return notes
 
-    def _extract_note_content(self, zdata: bytes) -> Optional[str]:
+    def _extract_note_content(self, zdata: bytes) -> str | None:
         """Extract plain text content from compressed note data."""
         if not zdata:
             return None

@@ -1,7 +1,9 @@
 """Main parser class for Apple Notes databases."""
 
-from typing import List, Dict, Optional, Callable
+from __future__ import annotations
+
 from pathlib import Path
+from collections.abc import Callable
 
 from .database import AppleNotesDatabase
 from .models import Account, Folder, Note
@@ -11,7 +13,7 @@ from .exceptions import AppleNotesParserError, DatabaseError
 class AppleNotesParser:
     """Main parser for Apple Notes SQLite databases."""
     
-    def __init__(self, database_path: Optional[str] = None):
+    def __init__(self, database_path: str | None = None):
         """Initialize parser with path to Notes SQLite database.
         
         Args:
@@ -25,9 +27,9 @@ class AppleNotesParser:
         except DatabaseError as e:
             raise AppleNotesParserError(str(e))
         
-        self._accounts: Optional[List[Account]] = None
-        self._folders: Optional[List[Folder]] = None
-        self._notes: Optional[List[Note]] = None
+        self._accounts: list[Account] | None = None
+        self._folders: list[Folder] | None = None
+        self._notes: list[Note] | None = None
     
     def load_data(self) -> None:
         """Load all data from the database."""
@@ -49,36 +51,36 @@ class AppleNotesParser:
             self._notes = notes_list
     
     @property
-    def accounts(self) -> List[Account]:
+    def accounts(self) -> list[Account]:
         """Get all accounts."""
         if self._accounts is None:
             self.load_data()
         return self._accounts or []
     
     @property
-    def folders(self) -> List[Folder]:
+    def folders(self) -> list[Folder]:
         """Get all folders."""
         if self._folders is None:
             self.load_data()
         return self._folders or []
     
     @property
-    def notes(self) -> List[Note]:
+    def notes(self) -> list[Note]:
         """Get all notes."""
         if self._notes is None:
             self.load_data()
         return self._notes or []
     
     @property
-    def folders_dict(self) -> Dict[int, Folder]:
+    def folders_dict(self) -> dict[int, Folder]:
         """Get folders as a dictionary for easy lookup by ID."""
         return {folder.id: folder for folder in self.folders}
     
-    def get_notes_by_tag(self, tag: str) -> List[Note]:
+    def get_notes_by_tag(self, tag: str) -> list[Note]:
         """Get all notes that have a specific tag."""
         return [note for note in self.notes if note.has_tag(tag)]
     
-    def get_notes_by_tags(self, tags: List[str], match_all: bool = False) -> List[Note]:
+    def get_notes_by_tags(self, tags: list[str], match_all: bool = False) -> list[Note]:
         """
         Get notes that have specific tags.
         
@@ -97,42 +99,42 @@ class AppleNotesParser:
                 if any(note.has_tag(tag) for tag in tags)
             ]
     
-    def get_notes_by_folder(self, folder_name: str) -> List[Note]:
+    def get_notes_by_folder(self, folder_name: str) -> list[Note]:
         """Get all notes in a specific folder."""
         return [note for note in self.notes if note.folder.name.lower() == folder_name.lower()]
     
-    def get_notes_by_account(self, account_name: str) -> List[Note]:
+    def get_notes_by_account(self, account_name: str) -> list[Note]:
         """Get all notes in a specific account."""
         return [note for note in self.notes if note.account.name.lower() == account_name.lower()]
     
-    def get_notes_with_mentions(self) -> List[Note]:
+    def get_notes_with_mentions(self) -> list[Note]:
         """Get all notes that contain mentions."""
         return [note for note in self.notes if note.mentions]
     
-    def get_notes_by_mention(self, mention: str) -> List[Note]:
+    def get_notes_by_mention(self, mention: str) -> list[Note]:
         """Get all notes that mention a specific user."""
         return [note for note in self.notes if note.has_mention(mention)]
     
-    def get_notes_with_links(self) -> List[Note]:
+    def get_notes_with_links(self) -> list[Note]:
         """Get all notes that contain links."""
         return [note for note in self.notes if note.links]
     
-    def get_notes_by_link_domain(self, domain: str) -> List[Note]:
+    def get_notes_by_link_domain(self, domain: str) -> list[Note]:
         """Get all notes that contain links to a specific domain."""
         return [
             note for note in self.notes 
             if any(domain.lower() in link.lower() for link in note.links)
         ]
     
-    def get_pinned_notes(self) -> List[Note]:
+    def get_pinned_notes(self) -> list[Note]:
         """Get all pinned notes."""
         return [note for note in self.notes if note.is_pinned]
     
-    def get_protected_notes(self) -> List[Note]:
+    def get_protected_notes(self) -> list[Note]:
         """Get all password-protected notes."""
         return [note for note in self.notes if note.is_password_protected]
     
-    def search_notes(self, query: str, case_sensitive: bool = False) -> List[Note]:
+    def search_notes(self, query: str, case_sensitive: bool = False) -> list[Note]:
         """Search for notes containing specific text."""
         if not case_sensitive:
             query = query.lower()
@@ -151,11 +153,11 @@ class AppleNotesParser:
         
         return results
     
-    def filter_notes(self, filter_func: Callable[[Note], bool]) -> List[Note]:
+    def filter_notes(self, filter_func: Callable[[Note], bool]) -> list[Note]:
         """Filter notes using a custom function."""
         return [note for note in self.notes if filter_func(note)]
     
-    def get_all_tags(self) -> List[str]:
+    def get_all_tags(self) -> list[str]:
         """Get all unique tags across all notes."""
         # Try to get tags from database first (more accurate for iOS 15+)
         try:
@@ -173,14 +175,14 @@ class AppleNotesParser:
             all_tags.update(note.tags)
         return sorted(list(all_tags))
     
-    def get_all_mentions(self) -> List[str]:
+    def get_all_mentions(self) -> list[str]:
         """Get all unique mentions across all notes."""
         all_mentions = set()
         for note in self.notes:
             all_mentions.update(note.mentions)
         return sorted(list(all_mentions))
     
-    def get_tag_counts(self) -> Dict[str, int]:
+    def get_tag_counts(self) -> dict[str, int]:
         """Get count of notes for each tag."""
         # Try to get counts from database first (more accurate for iOS 15+)
         try:
@@ -199,7 +201,7 @@ class AppleNotesParser:
                 tag_counts[tag] = tag_counts.get(tag, 0) + 1
         return dict(sorted(tag_counts.items()))
     
-    def get_folder_counts(self) -> Dict[str, int]:
+    def get_folder_counts(self) -> dict[str, int]:
         """Get count of notes for each folder."""
         folder_counts = {}
         for note in self.notes:
@@ -207,7 +209,7 @@ class AppleNotesParser:
             folder_counts[folder_name] = folder_counts.get(folder_name, 0) + 1
         return dict(sorted(folder_counts.items()))
     
-    def get_account_counts(self) -> Dict[str, int]:
+    def get_account_counts(self) -> dict[str, int]:
         """Get count of notes for each account."""
         account_counts = {}
         for note in self.notes:
@@ -215,7 +217,7 @@ class AppleNotesParser:
             account_counts[account_name] = account_counts.get(account_name, 0) + 1
         return dict(sorted(account_counts.items()))
     
-    def export_notes_to_dict(self, include_content: bool = True) -> Dict:
+    def export_notes_to_dict(self, include_content: bool = True) -> dict:
         """Export all notes to a dictionary structure."""
         folders_dict = self.folders_dict
         

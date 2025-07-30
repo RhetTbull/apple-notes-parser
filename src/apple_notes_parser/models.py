@@ -1,8 +1,9 @@
 """Data models for Apple Notes entities."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional, Dict, Any
 import re
 
 
@@ -12,7 +13,7 @@ class Account:
     id: int
     name: str
     identifier: str
-    user_record_name: Optional[str] = None
+    user_record_name: str | None = None
     
     def __str__(self) -> str:
         return f"Account(id={self.id}, name='{self.name}')"
@@ -24,10 +25,10 @@ class Folder:
     id: int
     name: str
     account: Account
-    uuid: Optional[str] = None
-    parent_id: Optional[int] = None
+    uuid: str | None = None
+    parent_id: int | None = None
     
-    def get_path(self, folders_dict: Optional[Dict[int, 'Folder']] = None) -> str:
+    def get_path(self, folders_dict: dict[int, Folder] | None = None) -> str:
         """Get the full path of this folder (e.g., 'Notes/Cocktails/Classic')."""
         if not folders_dict:
             return self.name
@@ -49,7 +50,7 @@ class Folder:
         path_parts.reverse()
         return "/".join(path_parts)
     
-    def get_parent(self, folders_dict: Dict[int, 'Folder']) -> Optional['Folder']:
+    def get_parent(self, folders_dict: dict[int, Folder]) -> Folder | None:
         """Get the parent folder object."""
         if self.parent_id and self.parent_id in folders_dict:
             return folders_dict[self.parent_id]
@@ -68,19 +69,19 @@ class Note:
     """Represents an Apple Notes note."""
     id: int
     note_id: int
-    title: Optional[str]
-    content: Optional[str]
-    creation_date: Optional[datetime]
-    modification_date: Optional[datetime]
+    title: str | None
+    content: str | None
+    creation_date: datetime | None
+    modification_date: datetime | None
     account: Account
     folder: Folder
     is_pinned: bool = False
     is_password_protected: bool = False
-    uuid: Optional[str] = None
-    applescript_id: Optional[str] = None
-    tags: List[str] = field(default_factory=list)
-    mentions: List[str] = field(default_factory=list)
-    links: List[str] = field(default_factory=list)
+    uuid: str | None = None
+    applescript_id: str | None = None
+    tags: list[str] = field(default_factory=list)
+    mentions: list[str] = field(default_factory=list)
+    links: list[str] = field(default_factory=list)
     
     def __post_init__(self):
         """Extract tags from content after initialization."""
@@ -105,7 +106,7 @@ class Note:
         """Check if the note contains a specific link."""
         return link in self.links
     
-    def get_folder_path(self, folders_dict: Optional[Dict[int, Folder]] = None) -> str:
+    def get_folder_path(self, folders_dict: dict[int, Folder] | None = None) -> str:
         """Get the full folder path for this note (e.g., 'Notes/Cocktails/Classic')."""
         if folders_dict:
             return self.folder.get_path(folders_dict)

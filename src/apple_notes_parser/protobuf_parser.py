@@ -1,8 +1,10 @@
 """Protobuf parsing utilities for Apple Notes data."""
 
+from __future__ import annotations
+
 import gzip
 import re
-from typing import Optional, List, Dict, Any
+from typing import Any
 from google.protobuf.message import DecodeError
 
 from .notestore_pb2 import NoteStoreProto, MergableDataProto
@@ -13,7 +15,7 @@ class ProtobufParser:
     """Handles parsing of Apple Notes protobuf data."""
     
     @staticmethod
-    def extract_note_text(zdata: bytes) -> Optional[str]:
+    def extract_note_text(zdata: bytes) -> str | None:
         """Extract plain text from compressed note data."""
         if not zdata:
             return None
@@ -46,7 +48,7 @@ class ProtobufParser:
             raise ProtobufError(f"Failed to extract note text: {e}")
     
     @staticmethod
-    def _extract_text_fallback(data: bytes) -> Optional[str]:
+    def _extract_text_fallback(data: bytes) -> str | None:
         """Fallback method to extract text when protobuf parsing fails."""
         try:
             # Try to find readable text in the binary data
@@ -60,7 +62,7 @@ class ProtobufParser:
             return None
     
     @staticmethod
-    def extract_hashtags(text: str) -> List[str]:
+    def extract_hashtags(text: str) -> list[str]:
         """Extract hashtags from note text."""
         if not text:
             return []
@@ -71,7 +73,7 @@ class ProtobufParser:
         return list(set(matches))  # Remove duplicates
     
     @staticmethod
-    def extract_mentions(text: str) -> List[str]:
+    def extract_mentions(text: str) -> list[str]:
         """Extract @mentions from note text."""
         if not text:
             return []
@@ -82,7 +84,7 @@ class ProtobufParser:
         return list(set(matches))  # Remove duplicates
     
     @staticmethod
-    def extract_links(text: str) -> List[str]:
+    def extract_links(text: str) -> list[str]:
         """Extract URLs from note text."""
         if not text:
             return []
@@ -93,7 +95,7 @@ class ProtobufParser:
         return list(set(matches))  # Remove duplicates
     
     @staticmethod
-    def parse_note_structure(zdata: bytes) -> Dict[str, Any]:
+    def parse_note_structure(zdata: bytes) -> dict[str, Any]:
         """Parse note structure and extract metadata."""
         if not zdata:
             return {}
