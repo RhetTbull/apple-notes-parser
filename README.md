@@ -239,9 +239,216 @@ Tags are extracted from note content using regex patterns:
 - **Rich Formatting**: Complex formatting information is not fully preserved in plain text output
 - **Deleted Notes**: Notes in trash/recently deleted are not accessible through this library
 
+## Development and Building
+
+### Prerequisites
+
+For using the library (end users), you only need:
+- Python 3.13+
+- Dependencies are automatically installed via `uv` or `pip`
+
+For development and building, you need:
+- Python 3.13+  
+- `uv` package manager (recommended) or `pip`
+- `grpcio-tools` (for protobuf code generation, if needed)
+
+### Development Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone <this-repository>
+   cd apple-notes-parser
+   ```
+
+2. **Install in development mode with uv (recommended):**
+   ```bash
+   uv sync --dev
+   ```
+
+3. **Or install with pip:**
+   ```bash
+   pip install -e ".[dev]"
+   ```
+
+### Running Tests
+
+The project includes a comprehensive test suite with 54+ tests:
+
+```bash
+# Run all tests
+uv run pytest
+
+# Run tests with verbose output
+uv run pytest -v
+
+# Run specific test file
+uv run pytest tests/test_real_database.py
+
+# Run tests with coverage
+uv run pytest --cov=apple_notes_parser
+```
+
+### Protobuf Code Generation
+
+**Important:** The protobuf Python files (`notestore_pb2.py`) are pre-generated and included in the repository. You typically don't need to regenerate them unless:
+
+- You're modifying the `notestore.proto` file
+- You're updating to a newer protobuf version
+- You encounter protobuf version compatibility warnings
+
+#### When to Regenerate Protobuf Files
+
+If you see warnings like:
+```
+UserWarning: Protobuf gencode version X.X.X is exactly one major version older than the runtime version Y.Y.Y
+```
+
+#### How to Regenerate Protobuf Files
+
+1. **Ensure you have the required tools:**
+   ```bash
+   uv add grpcio-tools  # Should already be installed as a dependency
+   ```
+
+2. **Navigate to the protobuf source directory:**
+   ```bash
+   cd src/apple_notes_parser
+   ```
+
+3. **Regenerate the Python protobuf files using the automated script:**
+   ```bash
+   python scripts/regenerate_protobuf.py
+   ```
+
+   Or manually:
+   ```bash
+   cd src/apple_notes_parser
+   python -m grpc_tools.protoc --proto_path=. --python_out=. notestore.proto
+   cd ../..  # Back to project root
+   uv run pytest  # Verify everything works
+   ```
+
+The automated script will:
+- Regenerate the protobuf files
+- Verify the version was updated correctly
+- Run the test suite to ensure compatibility
+
+### Package Structure
+
+```
+apple-notes-parser/
+├── src/apple_notes_parser/
+│   ├── __init__.py              # Main package exports
+│   ├── parser.py                # Main AppleNotesParser class  
+│   ├── database.py              # SQLite database operations
+│   ├── models.py                # Data models (Note, Folder, Account)
+│   ├── protobuf_parser.py       # Protobuf parsing logic
+│   ├── embedded_objects.py      # Hashtag/mention extraction
+│   ├── exceptions.py            # Custom exceptions
+│   ├── notestore.proto          # Protocol buffer schema (source)
+│   └── notestore_pb2.py         # Generated protobuf Python code
+├── tests/                       # Comprehensive test suite
+│   ├── conftest.py              # Pytest fixtures and configuration
+│   ├── data/                    # Test databases
+│   │   ├── NoteStore-macOS-15-Seqoia.sqlite  # Real test database
+│   │   └── Notes-macOS-15-Seqoia.txt         # Database content dump
+│   ├── test_real_database.py    # Tests using real database
+│   ├── test_version_agnostic.py # Cross-version compatibility tests
+│   └── test_*.py                # Additional test modules
+├── scripts/                     # Development and build scripts
+│   └── regenerate_protobuf.py   # Automated protobuf regeneration
+├── pyproject.toml               # Project configuration and dependencies
+├── README.md                    # This file
+└── pytest.ini                  # Test configuration
+```
+
+### Adding Support for New Database Versions
+
+The library is designed to be extensible for future macOS/iOS versions:
+
+1. **Add new test database:**
+   ```bash
+   # Place new database in tests/data/
+   cp /path/to/NoteStore-macOS-16.sqlite tests/data/
+   ```
+
+2. **Update test fixtures in `tests/conftest.py`:**
+   ```python
+   @pytest.fixture(params=["macos_15", "macos_16"])  # Add new version
+   def versioned_database(request):
+       if request.param == "macos_16":
+           database_path = Path(__file__).parent / "data" / "NoteStore-macOS-16.sqlite"
+           # ... handle new version
+   ```
+
+3. **Update version detection in `src/apple_notes_parser/database.py`:**
+   ```python
+   def get_ios_version(self) -> int:
+       # Add detection logic for new version
+       if "NEW_COLUMN_NAME" in columns:
+           self._ios_version = 19  # New version number
+   ```
+
+4. **Run tests to ensure compatibility:**
+   ```bash
+   uv run pytest tests/test_version_agnostic.py
+   ```
+
+### Building and Distribution
+
+To build the package for distribution:
+
+```bash
+# Install build tools
+uv add --dev build
+
+# Build the package
+uv run python -m build
+
+# This creates:
+# dist/apple_notes_parser-0.1.0-py3-none-any.whl
+# dist/apple_notes_parser-0.1.0.tar.gz
+```
+
+### Dependency Management
+
+The project uses these key dependencies:
+
+- **Runtime dependencies** (required for end users):
+  - `protobuf>=6.31.1` - Protocol buffer runtime for parsing compressed note data
+  - `grpcio-tools>=1.74.0` - Includes protobuf compiler for code generation
+
+- **Development dependencies** (for contributors):
+  - `pytest>=8.0.0` - Testing framework
+  - `pytest-cov>=4.0.0` - Coverage reporting
+
+### Troubleshooting
+
+**Protobuf version warnings:**
+- Regenerate protobuf files using the steps above
+- Ensure `protobuf` and `grpcio-tools` are at compatible versions
+
+**Test failures:**
+- Ensure you have the real test database in `tests/data/`
+- Check that your Python version is 3.13+
+- Try running `uv sync --dev` to refresh dependencies
+
+**Import errors:**
+- Verify installation with `uv run python -c "import apple_notes_parser; print('OK')"`
+- Check that you're in the correct virtual environment
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit pull requests or open issues.
+
+### Contribution Guidelines
+
+1. **Fork the repository** and create a feature branch
+2. **Write tests** for any new functionality
+3. **Ensure all tests pass** with `uv run pytest`
+4. **Follow existing code style** and patterns
+5. **Update documentation** for user-facing changes
+6. **Submit a pull request** with a clear description
 
 ## License
 
