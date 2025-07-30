@@ -61,6 +61,11 @@ class AppleNotesParser:
             self.load_data()
         return self._notes or []
     
+    @property
+    def folders_dict(self) -> Dict[int, Folder]:
+        """Get folders as a dictionary for easy lookup by ID."""
+        return {folder.id: folder for folder in self.folders}
+    
     def get_notes_by_tag(self, tag: str) -> List[Note]:
         """Get all notes that have a specific tag."""
         return [note for note in self.notes if note.has_tag(tag)]
@@ -204,6 +209,8 @@ class AppleNotesParser:
     
     def export_notes_to_dict(self, include_content: bool = True) -> Dict:
         """Export all notes to a dictionary structure."""
+        folders_dict = self.folders_dict
+        
         return {
             'accounts': [
                 {
@@ -220,7 +227,8 @@ class AppleNotesParser:
                     'name': folder.name,
                     'account_name': folder.account.name,
                     'uuid': folder.uuid,
-                    'parent_id': folder.parent_id
+                    'parent_id': folder.parent_id,
+                    'path': folder.get_path(folders_dict)
                 }
                 for folder in self.folders
             ],
@@ -234,6 +242,7 @@ class AppleNotesParser:
                     'modification_date': note.modification_date.isoformat() if note.modification_date else None,
                     'account_name': note.account.name,
                     'folder_name': note.folder.name,
+                    'folder_path': note.get_folder_path(folders_dict),
                     'is_pinned': note.is_pinned,
                     'is_password_protected': note.is_password_protected,
                     'uuid': note.uuid,

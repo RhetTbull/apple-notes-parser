@@ -158,13 +158,13 @@ class AppleNotesDatabase:
 
             if ios_version >= 9:
                 query = """
-                SELECT Z_PK, ZTITLE2, ZOWNER, ZIDENTIFIER
+                SELECT Z_PK, ZTITLE2, ZOWNER, ZIDENTIFIER, ZPARENT
                 FROM ZICCLOUDSYNCINGOBJECT
                 WHERE ZTITLE2 IS NOT NULL
                 """
             else:
                 query = """
-                SELECT Z_PK, ZNAME as ZTITLE2, ZACCOUNT as ZOWNER, '' as ZIDENTIFIER
+                SELECT Z_PK, ZNAME as ZTITLE2, ZACCOUNT as ZOWNER, '' as ZIDENTIFIER, NULL as ZPARENT
                 FROM ZSTORE
                 """
 
@@ -178,7 +178,8 @@ class AppleNotesDatabase:
                         id=row[0],
                         name=row[1] or "Untitled Folder",
                         account=accounts[account_id],
-                        uuid=row[3] if row[3] else None
+                        uuid=row[3] if row[3] else None,
+                        parent_id=row[4] if len(row) > 4 and row[4] else None
                     )
                     folders.append(folder)
 

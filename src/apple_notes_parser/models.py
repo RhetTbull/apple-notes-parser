@@ -27,6 +27,38 @@ class Folder:
     uuid: Optional[str] = None
     parent_id: Optional[int] = None
     
+    def get_path(self, folders_dict: Optional[Dict[int, 'Folder']] = None) -> str:
+        """Get the full path of this folder (e.g., 'Notes/Cocktails/Classic')."""
+        if not folders_dict:
+            return self.name
+        
+        path_parts = []
+        current_folder = self
+        visited = set()  # Prevent infinite loops
+        
+        while current_folder and current_folder.id not in visited:
+            visited.add(current_folder.id)
+            path_parts.append(current_folder.name)
+            
+            if current_folder.parent_id and current_folder.parent_id in folders_dict:
+                current_folder = folders_dict[current_folder.parent_id]
+            else:
+                break
+        
+        # Reverse to get root-to-leaf order
+        path_parts.reverse()
+        return "/".join(path_parts)
+    
+    def get_parent(self, folders_dict: Dict[int, 'Folder']) -> Optional['Folder']:
+        """Get the parent folder object."""
+        if self.parent_id and self.parent_id in folders_dict:
+            return folders_dict[self.parent_id]
+        return None
+    
+    def is_root(self) -> bool:
+        """Check if this is a root folder (no parent)."""
+        return self.parent_id is None
+    
     def __str__(self) -> str:
         return f"Folder(id={self.id}, name='{self.name}', account='{self.account.name}')"
 
@@ -72,6 +104,12 @@ class Note:
     def has_link(self, link: str) -> bool:
         """Check if the note contains a specific link."""
         return link in self.links
+    
+    def get_folder_path(self, folders_dict: Optional[Dict[int, Folder]] = None) -> str:
+        """Get the full folder path for this note (e.g., 'Notes/Cocktails/Classic')."""
+        if folders_dict:
+            return self.folder.get_path(folders_dict)
+        return self.folder.name
     
     def __str__(self) -> str:
         return f"Note(id={self.id}, title='{self.title}', folder='{self.folder.name}')"
