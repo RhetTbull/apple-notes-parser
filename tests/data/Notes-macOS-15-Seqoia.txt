@@ -1,0 +1,162 @@
+note.id=x-coredata://09FBEB4A-5B24-424E-814B-4AE8E757FB83/ICNote/p29
+note.name=This note is in a subfolder
+note.folder=Subfolder
+note.account=On My Mac
+note.creation_date=2025-07-30 07:47:31
+note.modification_date=2025-07-30 07:48:56
+note.password_protected=False
+note.body=<div><h1>This note is in a subfolder</h1></div>
+<div><br></div>
+<div>In Folder2/Subfolder</div>
+
+note.plaintext=This note is in a subfolder
+
+In Folder2/Subfolder
+
+note.id=x-coredata://09FBEB4A-5B24-424E-814B-4AE8E757FB83/ICNote/p31
+note.name=This note is deeply buried
+note.folder=Subsubfolder
+note.account=On My Mac
+note.creation_date=2025-07-30 07:48:15
+note.modification_date=2025-07-30 07:48:51
+note.password_protected=False
+note.body=<div><h1>This note is deeply buried</h1></div>
+<div><br></div>
+<div>In Folder2/Subfolder/Subsubfolder</div>
+
+note.plaintext=This note is deeply buried
+
+In Folder2/Subfolder/Subsubfolder
+note.id=x-coredata://09FBEB4A-5B24-424E-814B-4AE8E757FB83/ICNote/p26
+note.name=This note is in Folder
+note.folder=Folder
+note.account=On My Mac
+note.creation_date=2025-07-30 07:46:53
+note.modification_date=2025-07-30 07:47:03
+note.password_protected=False
+note.body=<div><h1>This note is in Folder</h1></div>
+<div><br></div>
+<div>In top level folder Folder</div>
+
+note.plaintext=This note is in Folder
+
+In top level folder Folder
+note.id=x-coredata://09FBEB4A-5B24-424E-814B-4AE8E757FB83/ICNote/p24
+note.name=This note is password protected
+note.folder=Notes
+note.account=On My Mac
+note.creation_date=2025-07-30 07:44:44
+note.modification_date=2025-07-30 07:44:53
+note.password_protected=True
+note.body=<div><h1>This note is password protected</h1></div>
+<div><br></div>
+<div>This is a secret!</div>
+
+note.plaintext=This note is password protected
+
+This is a secret!
+note.id=x-coredata://09FBEB4A-5B24-424E-814B-4AE8E757FB83/ICNote/p13
+note.name=This note has an attachment
+note.folder=Notes
+note.account=On My Mac
+note.creation_date=2025-07-30 07:41:10
+note.modification_date=2025-07-30 07:42:57
+note.password_protected=False
+note.body=<div><h1>This note has an attachment</h1></div>
+<div><br></div>
+<div>The attachment is called “bitcoin.pdf”</div>
+<div><br></div>
+<div><br><br></div>
+
+note.plaintext=This note has an attachment
+
+The attachment is called “bitcoin.pdf”
+
+￼
+
+note.id=x-coredata://09FBEB4A-5B24-424E-814B-4AE8E757FB83/ICNote/p11
+note.name=This note has special formatting
+note.folder=Notes
+note.account=On My Mac
+note.creation_date=2025-07-30 07:40:07
+note.modification_date=2025-07-30 07:41:06
+note.password_protected=False
+note.body=<div><h1>This note has special formatting</h1></div>
+<div><br></div>
+<div>This is a checklist with 3 items:</div>
+<div><br></div>
+<ul>
+<li>Item 1</li>
+<li>Item 2</li>
+<li>Item 3</li>
+</ul>
+<div><br></div>
+<div><br></div>
+<div>This is a 2x2 table:</div>
+<div><br></div>
+<div><object><table cellspacing="0" cellpadding="0" style="border-collapse: collapse; direction: ltr">
+<tbody>
+<tr><td valign="top" style="border-style: solid; border-width: 1.0px 1.0px 1.0px 1.0px; border-color: #ccc; padding: 3.0px 5.0px 3.0px 5.0px; min-width: 70px"><div>Header 1</div>
+</td><td valign="top" style="border-style: solid; border-width: 1.0px 1.0px 1.0px 1.0px; border-color: #ccc; padding: 3.0px 5.0px 3.0px 5.0px; min-width: 70px"><div>Header 2</div>
+</td></tr>
+<tr><td valign="top" style="border-style: solid; border-width: 1.0px 1.0px 1.0px 1.0px; border-color: #ccc; padding: 3.0px 5.0px 3.0px 5.0px; min-width: 70px"><div>Item 1</div>
+</td><td valign="top" style="border-style: solid; border-width: 1.0px 1.0px 1.0px 1.0px; border-color: #ccc; padding: 3.0px 5.0px 3.0px 5.0px; min-width: 70px"><div>Item 2</div>
+</td></tr>
+</tbody>
+</table></object><br></div>
+<div><br></div>
+<div><b><u>This text is in bold underline.</u></b></div>
+<div><br></div>
+
+note.plaintext=This note has special formatting
+
+This is a checklist with 3 items:
+
+Item 1
+Item 2
+Item 3
+
+
+This is a 2x2 table:
+
+￼
+
+This text is in bold underline.
+
+
+note.id=x-coredata://09FBEB4A-5B24-424E-814B-4AE8E757FB83/ICNote/p6
+note.name=This note has tags
+note.folder=Notes
+note.account=On My Mac
+note.creation_date=2025-07-30 07:39:41
+note.modification_date=2025-07-30 07:40:04
+note.password_protected=False
+note.body=<div><h1>This note has tags</h1></div>
+<div><br></div>
+<div>This note has tags “travel” and “vacation”</div>
+<div><br></div>
+<div><br><br></div>
+<div><br><br></div>
+
+note.plaintext=This note has tags
+
+This note has tags “travel” and “vacation”
+
+￼
+￼
+
+note.id=x-coredata://09FBEB4A-5B24-424E-814B-4AE8E757FB83/ICNote/p5
+note.name=This is a note
+note.folder=Notes
+note.account=On My Mac
+note.creation_date=2025-07-30 07:39:30
+note.modification_date=2025-07-30 07:39:38
+note.password_protected=False
+note.body=<div><h1>This is a note</h1></div>
+<div><br></div>
+<div>It is not in a folder</div>
+
+note.plaintext=This is a note
+
+It is not in a folder
+

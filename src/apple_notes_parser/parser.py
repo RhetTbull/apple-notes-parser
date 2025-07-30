@@ -5,17 +5,25 @@ from pathlib import Path
 
 from .database import AppleNotesDatabase
 from .models import Account, Folder, Note
-from .exceptions import AppleNotesParserError
+from .exceptions import AppleNotesParserError, DatabaseError
 
 
 class AppleNotesParser:
     """Main parser for Apple Notes SQLite databases."""
     
-    def __init__(self, database_path: str):
-        """Initialize parser with path to Notes SQLite database."""
-        self.database_path = Path(database_path)
-        if not self.database_path.exists():
-            raise AppleNotesParserError(f"Database file not found: {database_path}")
+    def __init__(self, database_path: Optional[str] = None):
+        """Initialize parser with path to Notes SQLite database.
+        
+        Args:
+            database_path: Path to NoteStore.sqlite. If None, tries to find the default
+                          macOS location in ~/Library/Group Containers/
+        """
+        # Let AppleNotesDatabase handle the path resolution
+        try:
+            self.database = AppleNotesDatabase(database_path)
+            self.database_path = self.database.database_path
+        except DatabaseError as e:
+            raise AppleNotesParserError(str(e))
         
         self._accounts: Optional[List[Account]] = None
         self._folders: Optional[List[Folder]] = None

@@ -2,6 +2,7 @@
 
 import sqlite3
 import gzip
+import os
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime
@@ -15,8 +16,16 @@ from .embedded_objects import EmbeddedObjectExtractor
 class AppleNotesDatabase:
     """Handles SQLite database operations for Apple Notes."""
 
-    def __init__(self, database_path: str):
-        """Initialize with path to Notes SQLite database."""
+    def __init__(self, database_path: Optional[str] = None):
+        """Initialize with path to Notes SQLite database.
+        
+        Args:
+            database_path: Path to NoteStore.sqlite. If None, tries to find the default
+                          macOS location in ~/Library/Group Containers/
+        """
+        if database_path is None:
+            database_path = self._find_default_database_path()
+        
         self.database_path = Path(database_path)
         if not self.database_path.exists():
             raise DatabaseError(f"Database file not found: {database_path}")
@@ -24,6 +33,30 @@ class AppleNotesDatabase:
         self.connection: Optional[sqlite3.Connection] = None
         self._ios_version: Optional[int] = None
         self._embedded_extractor: Optional[EmbeddedObjectExtractor] = None
+    
+    def _find_default_database_path(self) -> str:
+        """Find the default Apple Notes database path on macOS."""
+        home = Path.home()
+        
+        # Common macOS Notes database locations
+        possible_paths = [
+            # Modern macOS (10.15+)
+            home / "Library" / "Group Containers" / "group.com.apple.notes" / "NoteStore.sqlite",
+            # Alternative location
+            home / "Library" / "Containers" / "com.apple.Notes" / "Data" / "Library" / "Notes" / "NotesV7.storedata",
+            # Older locations (for completeness)
+            home / "Library" / "Containers" / "com.apple.Notes" / "Data" / "Library" / "CoreData" / "ExternalRecords" / "NoteStore.sqlite",
+        ]
+        
+        for path in possible_paths:
+            if path.exists():
+                return str(path)
+        
+        # If no default found, raise an error with helpful message
+        raise DatabaseError(
+            "Could not find Apple Notes database. Please provide the path explicitly. "
+            f"Searched locations: {[str(p) for p in possible_paths]}"
+        )
 
     def __enter__(self):
         """Context manager entry."""
