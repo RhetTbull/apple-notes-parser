@@ -9,7 +9,7 @@ from pathlib import Path
 from datetime import datetime
 
 from .exceptions import DatabaseError
-from .models import Account, Folder, Note
+from .models import Account, Folder, Note, Attachment
 from .protobuf_parser import ProtobufParser
 from .embedded_objects import EmbeddedObjectExtractor
 
@@ -222,6 +222,62 @@ class AppleNotesDatabase:
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to get folders: {e}")
 
+    def get_attachments(self, accounts: dict[int, Account]) -> list[Attachment]:
+        """Get all attachments from the database."""
+        self._ensure_connected()
+        cursor = self.connection.cursor()
+
+        try:
+            ios_version = self.get_ios_version()
+            z_uuid = self.get_z_uuid()
+
+            # Query for attachment records
+            # Attachments are stored as ZICCLOUDSYNCINGOBJECT records with ZNOTE pointing to the parent note
+            query = """
+            SELECT 
+                obj.Z_PK,
+                COALESCE(obj.ZFILENAME, obj.ZTITLE) as filename,
+                obj.ZFILESIZE, 
+                obj.ZTYPEUTI,
+                obj.ZNOTE,
+                obj.ZCREATIONDATE,
+                obj.ZMODIFICATIONDATE,
+                obj.ZIDENTIFIER,
+                obj.ZREMOTEFILEURLSTRING
+            FROM ZICCLOUDSYNCINGOBJECT obj
+            WHERE obj.ZNOTE IS NOT NULL 
+                AND (obj.ZFILENAME IS NOT NULL OR obj.ZTITLE IS NOT NULL OR obj.ZFILESIZE > 0 OR obj.ZTYPEUTI IS NOT NULL)
+                AND obj.ZTITLE1 IS NULL
+                AND (obj.ZTYPEUTI IS NOT NULL AND obj.ZTYPEUTI != '')
+            """
+
+            cursor.execute(query)
+            attachments = []
+
+            for row in cursor.fetchall():
+                # Convert Core Data timestamps to datetime
+                creation_date = self._convert_core_time(row[5]) if row[5] else None
+                modification_date = self._convert_core_time(row[6]) if row[6] else None
+
+                attachment = Attachment(
+                    id=row[0],
+                    filename=row[1],
+                    file_size=row[2] if row[2] and row[2] > 0 else None,
+                    type_uti=row[3],
+                    note_id=row[4],
+                    creation_date=creation_date,
+                    modification_date=modification_date,
+                    uuid=row[7],
+                    is_remote=row[8] is not None,
+                    remote_url=row[8]
+                )
+                attachments.append(attachment)
+
+            return attachments
+
+        except sqlite3.Error as e:
+            raise DatabaseError(f"Failed to get attachments: {e}")
+
     def get_notes(self, accounts: dict[int, Account], folders: dict[int, Folder]) -> list[Note]:
         """Get all notes from the database."""
         self._ensure_connected()
@@ -230,6 +286,14 @@ class AppleNotesDatabase:
         try:
             ios_version = self.get_ios_version()
             z_uuid = self.get_z_uuid()  # Get Z_UUID for AppleScript ID construction
+            
+            # Get all attachments first and organize by note_id
+            attachments_list = self.get_attachments(accounts)
+            attachments_by_note = {}
+            for attachment in attachments_list:
+                if attachment.note_id not in attachments_by_note:
+                    attachments_by_note[attachment.note_id] = []
+                attachments_by_note[attachment.note_id].append(attachment)
 
             # Build query based on iOS version
             if ios_version >= 16:
@@ -308,6 +372,9 @@ class AppleNotesDatabase:
                     if z_uuid:
                         applescript_id = f"x-coredata://{z_uuid}/ICNote/p{row[1]}"
 
+                    # Get attachments for this note
+                    note_attachments = attachments_by_note.get(row[1], [])
+
                     note = Note(
                         id=row[0],
                         note_id=row[1],
@@ -323,7 +390,8 @@ class AppleNotesDatabase:
                         is_password_protected=bool(row[10]) if row[10] is not None else False,
                         tags=hashtags,
                         mentions=mentions,
-                        links=links
+                        links=links,
+                        attachments=note_attachments
                     )
                     notes.append(note)
 

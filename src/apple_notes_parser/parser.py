@@ -6,7 +6,7 @@ from pathlib import Path
 from collections.abc import Callable
 
 from .database import AppleNotesDatabase
-from .models import Account, Folder, Note
+from .models import Account, Folder, Note, Attachment
 from .exceptions import AppleNotesParserError, DatabaseError
 
 
@@ -134,6 +134,24 @@ class AppleNotesParser:
         """Get all password-protected notes."""
         return [note for note in self.notes if note.is_password_protected]
     
+    def get_notes_with_attachments(self) -> list[Note]:
+        """Get all notes that have attachments."""
+        return [note for note in self.notes if note.has_attachments()]
+    
+    def get_notes_by_attachment_type(self, attachment_type: str) -> list[Note]:
+        """Get notes that have attachments of a specific type (image, video, audio, document)."""
+        return [
+            note for note in self.notes 
+            if note.get_attachments_by_type(attachment_type)
+        ]
+    
+    def get_all_attachments(self) -> list[Attachment]:
+        """Get all attachments across all notes."""
+        attachments = []
+        for note in self.notes:
+            attachments.extend(note.attachments)
+        return attachments
+    
     def search_notes(self, query: str, case_sensitive: bool = False) -> list[Note]:
         """Search for notes containing specific text."""
         if not case_sensitive:
@@ -259,7 +277,27 @@ class AppleNotesParser:
                     'applescript_id': note.applescript_id,
                     'tags': note.tags,
                     'mentions': note.mentions,
-                    'links': note.links
+                    'links': note.links,
+                    'attachments': [
+                        {
+                            'id': attachment.id,
+                            'filename': attachment.filename,
+                            'file_size': attachment.file_size,
+                            'type_uti': attachment.type_uti,
+                            'file_extension': attachment.file_extension,
+                            'mime_type': attachment.mime_type,
+                            'is_image': attachment.is_image,
+                            'is_video': attachment.is_video,
+                            'is_audio': attachment.is_audio,
+                            'is_document': attachment.is_document,
+                            'creation_date': attachment.creation_date.isoformat() if attachment.creation_date else None,
+                            'modification_date': attachment.modification_date.isoformat() if attachment.modification_date else None,
+                            'uuid': attachment.uuid,
+                            'is_remote': attachment.is_remote,
+                            'remote_url': attachment.remote_url
+                        }
+                        for attachment in note.attachments
+                    ]
                 }
                 for note in self.notes
             ]

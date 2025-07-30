@@ -10,6 +10,7 @@ A Python library for reading and parsing Apple Notes SQLite databases. This libr
 -  **Tag Filtering**: Find notes by specific tags or combinations of tags
 -  **Mention Support**: Extract and search for @mentions in notes
 -  **Link Extraction**: Find and filter notes containing URLs
+- ✅ **Attachment Support**: Extract attachment metadata and filter notes by attachment type
 -  **Multi-Version Support**: Works with iOS 9+ and macOS Notes databases
 -  **Search Functionality**: Full-text search across note content
 -  **Export Capabilities**: Export data to JSON format
@@ -115,6 +116,12 @@ Main parser class for Apple Notes databases.
 - `get_notes_with_links()` - Get notes containing URLs
 - `get_notes_by_link_domain(domain: str)` - Get notes with links to specific domain
 
+### Attachments
+
+- `get_notes_with_attachments()` - Get notes that have attachments
+- `get_notes_by_attachment_type(attachment_type: str)` - Get notes with specific attachment types (image, video, audio, document)
+- `get_all_attachments()` - Get all attachments across all notes
+
 ### Export
 
 - `export_notes_to_dict(include_content: bool = True)` - Export to dictionary/JSON
@@ -136,6 +143,7 @@ Main parser class for Apple Notes databases.
 - `tags: List[str]` - Hashtags found in note
 - `mentions: List[str]` - @mentions found in note
 - `links: List[str]` - URLs found in note
+- `attachments: List[Attachment]` - File attachments in note
 
 #### `Folder`
 - `id: int` - Database primary key
@@ -143,6 +151,26 @@ Main parser class for Apple Notes databases.
 - `account: Account` - Owning account
 - `uuid: str` - Unique identifier
 - `parent_id: int` - Parent folder ID (for nested folders)
+
+#### `Attachment`
+- `id: int` - Database primary key
+- `filename: str` - Attachment filename (e.g., "document.pdf")
+- `file_size: int` - File size in bytes
+- `type_uti: str` - Uniform Type Identifier (e.g., "com.adobe.pdf")
+- `note_id: int` - Parent note ID
+- `creation_date: datetime` - When attachment was created
+- `modification_date: datetime` - When attachment was last modified
+- `uuid: str` - Unique identifier
+- `is_remote: bool` - Whether attachment is stored remotely
+- `remote_url: str` - Remote URL if applicable
+
+##### Attachment Properties
+- `file_extension: str` - File extension (e.g., "pdf", "jpg")
+- `mime_type: str` - MIME type (e.g., "application/pdf", "image/jpeg")
+- `is_image: bool` - Whether attachment is an image
+- `is_video: bool` - Whether attachment is a video
+- `is_audio: bool` - Whether attachment is audio
+- `is_document: bool` - Whether attachment is a document
 
 #### `Account`
 - `id: int` - Database primary key
@@ -182,10 +210,49 @@ recent_notes = parser.filter_notes(
                  note.modification_date > datetime.now() - timedelta(days=7)
 )
 
-# Find notes with attachments (based on content)
-notes_with_images = parser.filter_notes(
-    lambda note: note.content and "image" in note.content.lower()
-)
+# Find notes with attachments
+notes_with_attachments = parser.get_notes_with_attachments()
+print(f"Found {len(notes_with_attachments)} notes with attachments")
+
+# Find notes with specific attachment types
+image_notes = parser.get_notes_by_attachment_type("image")
+document_notes = parser.get_notes_by_attachment_type("document")
+video_notes = parser.get_notes_by_attachment_type("video")
+audio_notes = parser.get_notes_by_attachment_type("audio")
+```
+
+### Working with Attachments
+
+```python
+# Get all notes that have attachments
+notes_with_attachments = parser.get_notes_with_attachments()
+print(f"Found {len(notes_with_attachments)} notes with attachments")
+
+# Filter by attachment type
+image_notes = parser.get_notes_by_attachment_type("image")
+document_notes = parser.get_notes_by_attachment_type("document")
+video_notes = parser.get_notes_by_attachment_type("video")
+audio_notes = parser.get_notes_by_attachment_type("audio")
+
+# Get all attachments across all notes
+all_attachments = parser.get_all_attachments()
+for attachment in all_attachments:
+    print(f"{attachment.filename} ({attachment.file_size} bytes) - {attachment.mime_type}")
+
+# Work with individual note attachments
+for note in notes_with_attachments:
+    print(f"Note: {note.title}")
+    for attachment in note.attachments:
+        print(f"  - {attachment.filename}")
+        print(f"    Size: {attachment.file_size} bytes")
+        print(f"    Type: {attachment.type_uti}")
+        print(f"    MIME: {attachment.mime_type}")
+        print(f"    Is Image: {attachment.is_image}")
+        print(f"    Is Document: {attachment.is_document}")
+        
+        # Filter by file extension
+        if attachment.file_extension == "pdf":
+            print(f"    Found PDF: {attachment.filename}")
 ```
 
 ### Export Data
@@ -235,7 +302,7 @@ Tags are extracted from note content using regex patterns:
 ## Limitations
 
 - **Encrypted Notes**: Password-protected notes cannot be decrypted without the password
-- **Attachments**: Binary attachments are not extracted, only referenced
+- **Attachment Files**: Binary attachment files are not extracted from the database, only metadata is available
 - **Rich Formatting**: Complex formatting information is not fully preserved in plain text output
 - **Deleted Notes**: Notes in trash/recently deleted are not accessible through this library
 

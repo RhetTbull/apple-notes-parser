@@ -116,6 +116,22 @@ class TestRealDatabase:
         assert attachment_note is not None
         assert attachment_note.applescript_id == sample_notes_data["attachment_note"]["applescript_id"]
         
+        # Test that attachments are loaded
+        assert attachment_note.has_attachments(), "Attachment note should have attachments"
+        assert len(attachment_note.attachments) >= 1, "Should have at least one attachment"
+        
+        # Test attachment properties
+        first_attachment = attachment_note.attachments[0]
+        assert first_attachment.filename == "bitcoin.pdf"
+        assert first_attachment.file_size == 184292
+        assert first_attachment.type_uti == "com.adobe.pdf"
+        assert first_attachment.mime_type == "application/pdf"
+        assert first_attachment.file_extension == "pdf"
+        assert first_attachment.is_document is True
+        assert first_attachment.is_image is False
+        assert first_attachment.is_video is False
+        assert first_attachment.is_audio is False
+        
         # Test subfolder note
         subfolder_note = notes_by_title.get(sample_notes_data["subfolder_note"]["title"])
         assert subfolder_note is not None
@@ -256,3 +272,89 @@ class TestRealDatabaseWithParser:
             assert "applescript_id" in note_data
             assert note_data["applescript_id"] is not None
             assert "09FBEB4A-5B24-424E-814B-4AE8E757FB83" in note_data["applescript_id"]
+
+    def test_attachment_functionality(self, real_database, sample_notes_data):
+        """Test attachment extraction and search functionality."""
+        parser = AppleNotesParser(real_database) 
+        
+        # Test notes with attachments
+        notes_with_attachments = parser.get_notes_with_attachments()
+        assert len(notes_with_attachments) >= 1, "Should find at least one note with attachments"
+        
+        # Test specific attachment note
+        attachment_note_title = sample_notes_data["attachment_note"]["title"] 
+        attachment_notes = [note for note in notes_with_attachments if note.title == attachment_note_title]
+        assert len(attachment_notes) == 1, f"Should find exactly one note titled '{attachment_note_title}'"
+        
+        attachment_note = attachment_notes[0]
+        assert attachment_note.has_attachments()
+        assert len(attachment_note.attachments) >= 1
+        
+        # Test attachment type filtering
+        document_notes = parser.get_notes_by_attachment_type("document")
+        assert len(document_notes) >= 1, "Should find notes with document attachments"
+        assert attachment_note in document_notes, "PDF attachment should be classified as document"
+        
+        # Test image, video, audio filtering (should be empty for our test data)
+        image_notes = parser.get_notes_by_attachment_type("image")
+        video_notes = parser.get_notes_by_attachment_type("video")
+        audio_notes = parser.get_notes_by_attachment_type("audio")
+        
+        # These may be empty in our test database
+        assert isinstance(image_notes, list)
+        assert isinstance(video_notes, list)
+        assert isinstance(audio_notes, list)
+        
+        # Test getting all attachments
+        all_attachments = parser.get_all_attachments()
+        assert len(all_attachments) >= 1, "Should find at least one attachment across all notes"
+        
+        # Verify PDF attachment properties
+        pdf_attachments = [att for att in all_attachments if att.filename == "bitcoin.pdf"]
+        assert len(pdf_attachments) == 1, "Should find exactly one bitcoin.pdf attachment"
+        
+        pdf_attachment = pdf_attachments[0]
+        assert pdf_attachment.file_size == 184292
+        assert pdf_attachment.type_uti == "com.adobe.pdf"
+        assert pdf_attachment.mime_type == "application/pdf"
+        assert pdf_attachment.is_document
+        assert not pdf_attachment.is_image
+        assert not pdf_attachment.is_video
+        assert not pdf_attachment.is_audio
+
+    def test_attachment_export(self, real_database):
+        """Test that attachments are included in export data."""
+        parser = AppleNotesParser(real_database)
+        
+        export_data = parser.export_notes_to_dict(include_content=True)
+        
+        # Find note with attachment in export data
+        attachment_note_data = None
+        for note_data in export_data["notes"]:
+            if note_data["title"] == "This note has an attachment":
+                attachment_note_data = note_data
+                break
+        
+        assert attachment_note_data is not None, "Should find attachment note in export"
+        assert "attachments" in attachment_note_data, "Note data should include attachments field"
+        assert len(attachment_note_data["attachments"]) >= 1, "Should export at least one attachment"
+        
+        # Verify attachment data structure
+        first_attachment = attachment_note_data["attachments"][0]
+        expected_fields = [
+            "id", "filename", "file_size", "type_uti", "file_extension", 
+            "mime_type", "is_image", "is_video", "is_audio", "is_document",
+            "creation_date", "modification_date", "uuid", "is_remote", "remote_url"
+        ]
+        
+        for field in expected_fields:
+            assert field in first_attachment, f"Attachment should have '{field}' field"
+        
+        # Verify specific values for our known attachment
+        assert first_attachment["filename"] == "bitcoin.pdf"
+        assert first_attachment["file_size"] == 184292
+        assert first_attachment["type_uti"] == "com.adobe.pdf"
+        assert first_attachment["mime_type"] == "application/pdf"
+        assert first_attachment["file_extension"] == "pdf"
+        assert first_attachment["is_document"] is True
+        assert first_attachment["is_image"] is False
