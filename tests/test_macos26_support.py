@@ -14,57 +14,57 @@ from apple_notes_parser import AppleNotesParser
 from apple_notes_parser.database import AppleNotesDatabase
 
 
-class TestiOS19Support:
-    """Test functionality specific to iOS 19 / macOS 26 Tahoe databases."""
+class TestmacOS26Support:
+    """Test functionality specific to macOS 26 Tahoe databases."""
 
     @pytest.fixture
-    def ios19_database(self):
-        """Fixture providing path to the iOS 19 database."""
+    def macos26_database(self):
+        """Fixture providing path to the macOS 26 database."""
         database_path = (
             Path(__file__).parent / "data" / "NoteStore-macOS-26-Tahoe.sqlite"
         )
         if not database_path.exists():
-            pytest.skip(f"iOS 19 database not found at {database_path}")
+            pytest.skip(f"macOS 26 database not found at {database_path}")
         return str(database_path)
 
     @pytest.fixture
-    def ios19_db_connection(self, ios19_database):
-        """Fixture providing a connected AppleNotesDatabase instance for iOS 19."""
-        with AppleNotesDatabase(ios19_database) as db:
+    def macos26_db_connection(self, macos26_database):
+        """Fixture providing a connected AppleNotesDatabase instance for macOS 26."""
+        with AppleNotesDatabase(macos26_database) as db:
             yield db
 
-    def test_ios19_version_detection(self, ios19_db_connection):
-        """Test that iOS 19 database is correctly identified."""
-        version = ios19_db_connection.get_ios_version()
-        assert version == 19, f"Expected iOS 19, got {version}"
+    def test_macos26_version_detection(self, macos26_db_connection):
+        """Test that macOS 26 database is correctly identified."""
+        version = macos26_db_connection.get_macos_version()
+        assert version == 26, f"Expected macOS 26, got {version}"
 
-    def test_ios19_z_uuid_extraction(self, ios19_db_connection):
-        """Test Z_UUID extraction from iOS 19 database."""
-        z_uuid = ios19_db_connection.get_z_uuid()
+    def test_macos26_z_uuid_extraction(self, macos26_db_connection):
+        """Test Z_UUID extraction from macOS 26 database."""
+        z_uuid = macos26_db_connection.get_z_uuid()
         assert z_uuid == "9B3F80E8-BEEE-4921-BE3B-57B7D6FFAF2E"
 
-    def test_ios19_basic_data_extraction(self, ios19_db_connection):
-        """Test basic data extraction from iOS 19 database."""
+    def test_macos26_basic_data_extraction(self, macos26_db_connection):
+        """Test basic data extraction from macOS 26 database."""
         # Test accounts
-        accounts = ios19_db_connection.get_accounts()
+        accounts = macos26_db_connection.get_accounts()
         assert len(accounts) == 1
         assert accounts[0].name == "On My Mac"
 
         # Test folders
         accounts_dict = {acc.id: acc for acc in accounts}
-        folders = ios19_db_connection.get_folders(accounts_dict)
+        folders = macos26_db_connection.get_folders(accounts_dict)
         assert len(folders) == 6
 
         # Test notes
         folders_dict = {f.id: f for f in folders}
-        notes = ios19_db_connection.get_notes(accounts_dict, folders_dict)
+        notes = macos26_db_connection.get_notes(accounts_dict, folders_dict)
         assert len(notes) == 7
 
-    def test_ios19_folder_structure(self, ios19_db_connection):
-        """Test folder hierarchy in iOS 19 database."""
-        accounts = ios19_db_connection.get_accounts()
+    def test_macos26_folder_structure(self, macos26_db_connection):
+        """Test folder hierarchy in macOS 26 database."""
+        accounts = macos26_db_connection.get_accounts()
         accounts_dict = {acc.id: acc for acc in accounts}
-        folders = ios19_db_connection.get_folders(accounts_dict)
+        folders = macos26_db_connection.get_folders(accounts_dict)
         folders_dict = {f.id: f for f in folders}
 
         # Verify expected folders exist
@@ -96,13 +96,13 @@ class TestiOS19Support:
         assert not subsubfolder.is_root()
         assert subsubfolder.get_parent(folders_dict).name == "Subfolder"
 
-    def test_ios19_notes_content(self, ios19_db_connection):
-        """Test note content extraction from iOS 19 database."""
-        accounts = ios19_db_connection.get_accounts()
+    def test_macos26_notes_content(self, macos26_db_connection):
+        """Test note content extraction from macOS 26 database."""
+        accounts = macos26_db_connection.get_accounts()
         accounts_dict = {acc.id: acc for acc in accounts}
-        folders = ios19_db_connection.get_folders(accounts_dict)
+        folders = macos26_db_connection.get_folders(accounts_dict)
         folders_dict = {f.id: f for f in folders}
-        notes = ios19_db_connection.get_notes(accounts_dict, folders_dict)
+        notes = macos26_db_connection.get_notes(accounts_dict, folders_dict)
 
         # Find specific notes by title
         notes_by_title = {n.title: n for n in notes if n.title}
@@ -123,13 +123,13 @@ class TestiOS19Support:
         assert formatted_note is not None
         assert not formatted_note.is_password_protected
 
-    def test_ios19_applescript_ids(self, ios19_db_connection):
-        """Test AppleScript ID construction for iOS 19 database."""
-        accounts = ios19_db_connection.get_accounts()
+    def test_macos26_applescript_ids(self, macos26_db_connection):
+        """Test AppleScript ID construction for macOS 26 database."""
+        accounts = macos26_db_connection.get_accounts()
         accounts_dict = {acc.id: acc for acc in accounts}
-        folders = ios19_db_connection.get_folders(accounts_dict)
+        folders = macos26_db_connection.get_folders(accounts_dict)
         folders_dict = {f.id: f for f in folders}
-        notes = ios19_db_connection.get_notes(accounts_dict, folders_dict)
+        notes = macos26_db_connection.get_notes(accounts_dict, folders_dict)
 
         # All notes should have AppleScript IDs
         for note in notes:
@@ -137,9 +137,9 @@ class TestiOS19Support:
             assert note.applescript_id.startswith("x-coredata://")
             assert "/ICNote/p" in note.applescript_id
 
-    def test_ios19_parser_integration(self, ios19_database):
-        """Test AppleNotesParser integration with iOS 19 database."""
-        parser = AppleNotesParser(ios19_database)
+    def test_macos26_parser_integration(self, macos26_database):
+        """Test AppleNotesParser integration with macOS 26 database."""
+        parser = AppleNotesParser(macos26_database)
 
         # Basic functionality
         assert len(parser.notes) == 7
@@ -162,9 +162,9 @@ class TestiOS19Support:
             assert isinstance(path, str)
             assert len(path) > 0
 
-    def test_ios19_export_functionality(self, ios19_database):
-        """Test export functionality with iOS 19 database."""
-        parser = AppleNotesParser(ios19_database)
+    def test_macos26_export_functionality(self, macos26_database):
+        """Test export functionality with macOS 26 database."""
+        parser = AppleNotesParser(macos26_database)
 
         # Test export to dict
         export_data = parser.export_notes_to_dict(include_content=True)
@@ -198,14 +198,14 @@ class TestiOS19Support:
         assert "This note has tags" in note_titles
         assert "This note is password protected" in note_titles
 
-    def test_ios19_deleted_folder_exclusion(self, ios19_db_connection):
-        """Test that deleted folders are properly excluded in iOS 19 database."""
-        accounts = ios19_db_connection.get_accounts()
+    def test_macos26_deleted_folder_exclusion(self, macos26_db_connection):
+        """Test that deleted folders are properly excluded in macOS 26 database."""
+        accounts = macos26_db_connection.get_accounts()
         accounts_dict = {acc.id: acc for acc in accounts}
-        folders = ios19_db_connection.get_folders(accounts_dict)
+        folders = macos26_db_connection.get_folders(accounts_dict)
 
         # Query database directly to verify filtering
-        cursor = ios19_db_connection.connection.cursor()
+        cursor = macos26_db_connection.connection.cursor()
 
         # Count all folders (including deleted)
         cursor.execute("""
@@ -222,18 +222,18 @@ class TestiOS19Support:
         # Our method should return the same count as non-deleted folders
         assert len(folders) == non_deleted_folders
 
-    def test_ios19_schema_features(self, ios19_db_connection):
-        """Test iOS 19 specific schema features."""
-        cursor = ios19_db_connection.connection.cursor()
+    def test_macos26_schema_features(self, macos26_db_connection):
+        """Test macOS 26 specific schema features."""
+        cursor = macos26_db_connection.connection.cursor()
 
-        # Check for iOS 19 specific column
+        # Check for macOS 26 specific column
         cursor.execute("PRAGMA table_info(ZICCLOUDSYNCINGOBJECT)")
         columns = [row[1] for row in cursor.fetchall()]
 
-        # iOS 19 should have the new column
+        # macOS 26 should have the new column
         assert "ZNEEDSTOFETCHUSERSPECIFICRECORDASSETS" in columns
 
-        # iOS 19 should also retain iOS 18 columns
+        # macOS 26 should also retain earlier columns
         assert "ZUNAPPLIEDENCRYPTEDRECORDDATA" in columns
 
         # Check for new table
@@ -242,30 +242,30 @@ class TestiOS19Support:
             WHERE type='table' AND name='ZICASSETSIGNATURE'
         """)
         result = cursor.fetchone()
-        assert result is not None, "ZICASSETSIGNATURE table should exist in iOS 19"
+        assert result is not None, "ZICASSETSIGNATURE table should exist in macOS 26"
 
 
 class TestVersionComparison:
-    """Test comparison between iOS 18 and iOS 19 databases."""
+    """Test comparison between macOS 15 and macOS 26 databases."""
 
     def test_version_detection_difference(self):
-        """Test that iOS 18 and iOS 19 are correctly distinguished."""
-        # Test iOS 18
-        with AppleNotesDatabase("tests/data/NoteStore-macOS-15-Seqoia.sqlite") as db18:
-            version18 = db18.get_ios_version()
-            assert version18 == 18
+        """Test that macOS 15 and macOS 26 databases are correctly distinguished."""
+        # Test macOS 15 (Sequoia) database
+        with AppleNotesDatabase("tests/data/NoteStore-macOS-15-Seqoia.sqlite") as db15:
+            version15 = db15.get_macos_version()
+            assert version15 == 15
 
-        # Test iOS 19
-        with AppleNotesDatabase("tests/data/NoteStore-macOS-26-Tahoe.sqlite") as db19:
-            version19 = db19.get_ios_version()
-            assert version19 == 19
+        # Test macOS 26 (Tahoe) database
+        with AppleNotesDatabase("tests/data/NoteStore-macOS-26-Tahoe.sqlite") as db26:
+            version26 = db26.get_macos_version()
+            assert version26 == 26
 
     def test_backward_compatibility(self):
         """Test that existing functionality works with both versions."""
         # Test both databases with same operations
         for db_path, _expected_version in [
-            ("tests/data/NoteStore-macOS-15-Seqoia.sqlite", 18),
-            ("tests/data/NoteStore-macOS-26-Tahoe.sqlite", 19),
+            ("tests/data/NoteStore-macOS-15-Seqoia.sqlite", 15),
+            ("tests/data/NoteStore-macOS-26-Tahoe.sqlite", 26),
         ]:
             parser = AppleNotesParser(db_path)
 

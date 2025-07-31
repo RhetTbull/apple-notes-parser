@@ -15,22 +15,22 @@ class EmbeddedObjectExtractor:
     UTI_MENTION = "com.apple.notes.inlinetextattachment.mention"
     UTI_LINK = "com.apple.notes.inlinetextattachment.link"
 
-    def __init__(self, connection: sqlite3.Connection, ios_version: int):
-        """Initialize with database connection and iOS version.
+    def __init__(self, connection: sqlite3.Connection, macos_version: int):
+        """Initialize with database connection and macOS version.
 
         Args:
             connection: Active SQLite database connection.
-            ios_version: Detected iOS/macOS version for schema compatibility.
+            macos_version: Detected macOS version for schema compatibility.
         """
         self.connection = connection
-        self.ios_version = ios_version
+        self.macos_version = macos_version
 
     def get_embedded_objects_for_note(self, note_id: int) -> dict[str, list[str]]:
         """Get all embedded objects for a specific note.
 
         Retrieves hashtags, mentions, and links that are stored as embedded
         objects in the database. This method is more accurate than regex
-        extraction for iOS 15+ databases.
+        extraction for macOS 11+ databases.
 
         Args:
             note_id: Database ID of the note to search for embedded objects.
@@ -42,8 +42,8 @@ class EmbeddedObjectExtractor:
         Raises:
             DatabaseError: If database query fails.
         """
-        if self.ios_version < 15:
-            # Hashtags and mentions were added in iOS 15
+        if self.macos_version < 11:
+            # Hashtags and mentions were added in macOS 11
             return {"hashtags": [], "mentions": [], "links": []}
 
         try:

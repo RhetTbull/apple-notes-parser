@@ -34,7 +34,7 @@ class AppleNotesDatabase:
             raise DatabaseError(f"Database file not found: {database_path}")
 
         self.connection: sqlite3.Connection | None = None
-        self._ios_version: int | None = None
+        self._macos_version: int | None = None
         self._embedded_extractor: EmbeddedObjectExtractor | None = None
 
     def _find_default_database_path(self) -> str:
@@ -126,9 +126,9 @@ class AppleNotesDatabase:
             self.connection.row_factory = sqlite3.Row
 
             # Initialize embedded object extractor once we have connection and version
-            ios_version = self.get_ios_version()
+            macos_version = self.get_macos_version()
             self._embedded_extractor = EmbeddedObjectExtractor(
-                self.connection, ios_version
+                self.connection, macos_version
             )
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to connect to database: {e}")
@@ -169,66 +169,101 @@ class AppleNotesDatabase:
             # Z_METADATA table may not exist in older versions
             return None
 
-    def get_ios_version(self) -> int:
-        """Detect iOS version based on database schema.
+    def get_macos_version(self) -> int:
+        """Detect macOS version based on database schema.
 
-        Analyzes the database schema to determine which iOS/macOS version
+        Analyzes the database schema to determine which macOS version
         created the database by checking for version-specific columns.
 
         Returns:
-            int: Detected iOS/macOS version number (e.g., 15, 16, 17, 18, 19).
+            int: Detected macOS version number (e.g., 11, 12, 13, 14, 15).
 
         Raises:
             DatabaseError: If version detection fails due to database access issues.
         """
-        if self._ios_version is not None:
-            return self._ios_version
+        if self._macos_version is not None:
+            return self._macos_version
 
         self._ensure_connected()
         assert self.connection is not None
         cursor = self.connection.cursor()
 
         try:
-            # Check for columns that appeared in different iOS versions
+            # Check for columns that appeared in different macOS versions
             cursor.execute("PRAGMA table_info(ZICCLOUDSYNCINGOBJECT)")
             columns = [row[1] for row in cursor.fetchall()]
 
             if "ZNEEDSTOFETCHUSERSPECIFICRECORDASSETS" in columns:
-                self._ios_version = 19
+                self._macos_version = 26  # macOS 26 (Tahoe)
             elif "ZUNAPPLIEDENCRYPTEDRECORDDATA" in columns:
-                self._ios_version = 18
+                self._macos_version = 15  # macOS 15 (Sequoia)
             elif "ZGENERATION" in columns:
-                self._ios_version = 17
+                self._macos_version = 13  # macOS 13 (Ventura)
             elif "ZACCOUNT6" in columns:
-                self._ios_version = 16
+                self._macos_version = 12  # macOS 12 (Monterey)
             elif "ZACCOUNT5" in columns:
-                self._ios_version = 15
+                self._macos_version = 11  # macOS 11 (Big Sur)
             elif "ZLASTOPENEDDATE" in columns:
-                self._ios_version = 14
+                self._macos_version = 10  # macOS 10.15 (Catalina)
             elif "ZACCOUNT4" in columns:
-                self._ios_version = 13
+                self._macos_version = 10  # macOS 10.14 (Mojave)
             elif "ZSERVERRECORDDATA" in columns:
-                self._ios_version = 12
+                self._macos_version = 10  # macOS 10.13 (High Sierra)
             else:
-                # Check for iOS 11 specific table
+                # Check for legacy table
                 cursor.execute(
                     "SELECT name FROM sqlite_master WHERE type='table' AND name='Z_11NOTES'"
                 )
                 if cursor.fetchone():
-                    self._ios_version = 11
+                    self._macos_version = 10  # macOS 10.12 (Sierra)
                 else:
-                    self._ios_version = 10  # Default fallback
+                    self._macos_version = 10  # Default fallback (macOS 10.11 and earlier)
 
-            return self._ios_version
+            return self._macos_version
 
         except sqlite3.Error as e:
-            raise DatabaseError(f"Failed to detect iOS version: {e}")
+            raise DatabaseError(f"Failed to detect macOS version: {e}")
+
+    def get_ios_version(self) -> int:
+        """Legacy method for backward compatibility.
+
+        Deprecated: Use get_macos_version() instead.
+        This method maps macOS versions to rough iOS equivalents for compatibility.
+
+        Returns:
+            int: Rough iOS version equivalent of detected macOS version.
+        """
+        macos_version = self.get_macos_version()
+
+        # Check for special case: newer macOS 15 builds with additional features
+        if macos_version == 15:
+            # Check if this is a newer macOS 15 build with ZNEEDSTOFETCHUSERSPECIFICRECORDASSETS
+            try:
+                cursor = self.connection.cursor()
+                cursor.execute("PRAGMA table_info(ZICCLOUDSYNCINGOBJECT)")
+                columns = [row[1] for row in cursor.fetchall()]
+                if "ZNEEDSTOFETCHUSERSPECIFICRECORDASSETS" in columns:
+                    return 19  # Newer macOS 15 build with additional features
+                else:
+                    return 18  # Standard macOS 15 build
+            except:
+                return 18  # Fallback to standard macOS 15
+        elif macos_version == 14:
+            return 17  # macOS 14 ~ iOS 17 (both released in 2023)
+        elif macos_version == 13:
+            return 16  # macOS 13 ~ iOS 16 (both released in 2022)
+        elif macos_version == 12:
+            return 15  # macOS 12 ~ iOS 15 (both released in 2021)
+        elif macos_version == 11:
+            return 14  # macOS 11 ~ iOS 14 (both released in 2020)
+        else:
+            return 13  # macOS 10.x ~ iOS 13 and earlier
 
     def get_accounts(self) -> list[Account]:
         """Get all accounts from the database.
 
         Retrieves all Apple Notes accounts (e.g., iCloud, On My Mac) from the database.
-        The query structure varies based on the detected iOS version.
+        The query structure varies based on the detected macOS version.
 
         Returns:
             list[Account]: List of Account objects representing all accounts in the database.
@@ -241,10 +276,10 @@ class AppleNotesDatabase:
         cursor = self.connection.cursor()
 
         try:
-            # Query varies by iOS version
-            ios_version = self.get_ios_version()
+            # Query varies by macOS version
+            macos_version = self.get_macos_version()
 
-            if ios_version >= 9:
+            if macos_version >= 10:
                 query = """
                 SELECT Z_PK, ZNAME, ZIDENTIFIER, ZUSERRECORDNAME
                 FROM ZICCLOUDSYNCINGOBJECT
@@ -294,9 +329,9 @@ class AppleNotesDatabase:
         cursor = self.connection.cursor()
 
         try:
-            ios_version = self.get_ios_version()
+            macos_version = self.get_macos_version()
 
-            if ios_version >= 9:
+            if macos_version >= 10:
                 query = """
                 SELECT Z_PK, ZTITLE2, ZOWNER, ZIDENTIFIER, ZPARENT
                 FROM ZICCLOUDSYNCINGOBJECT
@@ -350,7 +385,7 @@ class AppleNotesDatabase:
         cursor = self.connection.cursor()
 
         try:
-            self.get_ios_version()
+            self.get_macos_version()
             self.get_z_uuid()
 
             # Query for attachment records
@@ -426,7 +461,7 @@ class AppleNotesDatabase:
         cursor = self.connection.cursor()
 
         try:
-            ios_version = self.get_ios_version()
+            macos_version = self.get_macos_version()
             z_uuid = self.get_z_uuid()  # Get Z_UUID for AppleScript ID construction
 
             # Get all attachments first and organize by note_id
@@ -437,21 +472,15 @@ class AppleNotesDatabase:
                     attachments_by_note[attachment.note_id] = []
                 attachments_by_note[attachment.note_id].append(attachment)
 
-            # Build query based on iOS version
-            if ios_version >= 16:
+            # Build query based on macOS version
+            if macos_version >= 12:
                 account_field = "ZACCOUNT7"
                 creation_field = "ZCREATIONDATE3"
-            elif ios_version == 15:
+            elif macos_version == 11:
                 account_field = "ZACCOUNT4"
                 creation_field = "ZCREATIONDATE3"
-            elif ios_version >= 13:
+            elif macos_version >= 10:
                 account_field = "ZACCOUNT3"
-                creation_field = "ZCREATIONDATE1"
-            elif ios_version == 12:
-                account_field = "ZACCOUNT2"
-                creation_field = "ZCREATIONDATE1"
-            elif ios_version == 11:
-                account_field = "ZACCOUNT2"
                 creation_field = "ZCREATIONDATE1"
             else:
                 # Legacy version
@@ -495,7 +524,7 @@ class AppleNotesDatabase:
                     )
 
                     # Combine hashtags from both protobuf content and embedded objects
-                    # Embedded objects are more reliable for iOS 15+
+                    # Embedded objects are more reliable for macOS 11+
                     hashtags = embedded_objects.get("hashtags", [])
                     if not hashtags:
                         # Fallback to regex extraction for older versions or when embedded objects aren't found
@@ -553,9 +582,9 @@ class AppleNotesDatabase:
     def _get_legacy_notes(
         self, accounts: dict[int, Account], folders: dict[int, Folder]
     ) -> list[Note]:
-        """Get notes from legacy (pre-iOS 9) database format.
+        """Get notes from legacy (pre-macOS 10.11) database format.
 
-        Handles the older database schema used in iOS 8 and earlier versions
+        Handles the older database schema used in macOS 10.10 and earlier versions
         where notes were stored in ZNOTE/ZNOTEBODY tables instead of the
         modern ZICCLOUDSYNCINGOBJECT structure.
 

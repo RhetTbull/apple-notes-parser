@@ -118,7 +118,7 @@ def database_metadata():
     """Fixture providing expected database metadata."""
     return {
         "z_uuid": "09FBEB4A-5B24-424E-814B-4AE8E757FB83",
-        "ios_version": 18,  # Database is actually from iOS 18/macOS 15
+        "macos_version": 15,  # macOS 15 (Sequoia)
         "total_notes": 8,
         "total_folders": 6,
         "account_name": "On My Mac",
@@ -131,22 +131,22 @@ def macos_15_database():
     return real_database()
 
 
-@pytest.fixture(params=["macos_15", "macos_26"])
+@pytest.fixture(params=["macos_15_sequoia", "macos_26_tahoe"])
 def versioned_database(request):
     """Parameterized fixture for testing across different database versions."""
-    if request.param == "macos_15":
+    if request.param == "macos_15_sequoia":
         database_path = (
             Path(__file__).parent / "data" / "NoteStore-macOS-15-Seqoia.sqlite"
         )
         if not database_path.exists():
-            pytest.skip(f"macOS 15 database not found at {database_path}")
+            pytest.skip(f"macOS 15 (Sequoia) database not found at {database_path}")
         return str(database_path)
-    elif request.param == "macos_26":
+    elif request.param == "macos_26_tahoe":
         database_path = (
             Path(__file__).parent / "data" / "NoteStore-macOS-26-Tahoe.sqlite"
         )
         if not database_path.exists():
-            pytest.skip(f"macOS 26 database not found at {database_path}")
+            pytest.skip(f"macOS 26 (Tahoe) database not found at {database_path}")
         return str(database_path)
     else:
         pytest.skip(f"Database version {request.param} not available")
@@ -160,8 +160,8 @@ def version_metadata(versioned_database):
 
     if "macOS-15" in db_path.name:
         return {
-            "version": "macOS 15",
-            "ios_version": 18,  # Database is actually from iOS 18/macOS 15
+            "version": "macOS 15 (Sequoia)",
+            "macos_version": 15,  # macOS 15 (Sequoia)
             "z_uuid": "09FBEB4A-5B24-424E-814B-4AE8E757FB83",
             "total_notes": 8,
             "total_folders": 6,
@@ -184,8 +184,8 @@ def version_metadata(versioned_database):
         }
     elif "macOS-26" in db_path.name:
         return {
-            "version": "macOS 26",
-            "ios_version": 19,  # Database is actually from iOS 19/macOS 26
+            "version": "macOS 26 (Tahoe)",
+            "macos_version": 26,  # macOS 26 (Tahoe)
             "z_uuid": "9B3F80E8-BEEE-4921-BE3B-57B7D6FFAF2E",
             "total_notes": 7,
             "total_folders": 6,

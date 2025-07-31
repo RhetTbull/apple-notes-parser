@@ -18,8 +18,8 @@ class TestRealDatabase:
         self, database_with_connection, database_metadata
     ):
         """Test that the database is correctly identified as macOS 15."""
-        ios_version = database_with_connection.get_ios_version()
-        assert ios_version == database_metadata["ios_version"]
+        macos_version = database_with_connection.get_macos_version()
+        assert macos_version == database_metadata["macos_version"]
 
     def test_database_uuid_extraction(
         self, database_with_connection, database_metadata

@@ -18,8 +18,8 @@ class TestVersionAgnostic:
     def test_database_version_detection(self, versioned_database, version_metadata):
         """Test that database version is correctly detected."""
         with AppleNotesDatabase(versioned_database) as db:
-            ios_version = db.get_ios_version()
-            assert ios_version == version_metadata["ios_version"]
+            macos_version = db.get_macos_version()
+            assert macos_version == version_metadata["macos_version"]
 
     def test_z_uuid_extraction(self, versioned_database, version_metadata):
         """Test Z_UUID extraction works for all versions."""

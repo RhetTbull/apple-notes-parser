@@ -11,7 +11,7 @@ A Python library for reading and parsing Apple Notes SQLite databases. This libr
 - **Mention Support**: Extract and search for @mentions in notes
 - **Link Extraction**: Find and filter notes containing URLs
 - **Attachment Support**: Extract attachment metadata and filter notes by attachment type
-- **Multi-Version Support**: Works with iOS 9-19+ and macOS Notes databases
+- **Multi-Version Support**: Works with macOS 10.11+ Notes databases
 - **Search Functionality**: Full-text search across note content
 - **Export Capabilities**: Export data to JSON format
 - **Metadata Access**: Access creation dates, modification dates, pinned status, etc.
@@ -265,23 +265,23 @@ metadata_only = parser.export_notes_to_dict(include_content=False)
 
 The library uses Protocol Buffers to parse compressed note data. It can handle:
 
-- Modern Notes format (iOS 9+) with gzipped protobuf data
-- Legacy Notes format (pre-iOS 9) with plain text
+- Modern Notes format (macOS 10.11+) with gzipped protobuf data
+- Legacy Notes format (pre-macOS 10.11) with plain text
 - Automatic fallback when protobuf parsing fails
 
 ### Database Schema Detection
 
-Automatically detects iOS/macOS version based on database schema:
+Automatically detects macOS version based on database schema:
 
-- iOS 19: `ZNEEDSTOFETCHUSERSPECIFICRECORDASSETS` column
-- iOS 18: `ZUNAPPLIEDENCRYPTEDRECORDDATA` column
-- iOS 17: `ZGENERATION` column
-- iOS 16: `ZACCOUNT6` column
-- iOS 15: `ZACCOUNT5` column
-- iOS 14: `ZLASTOPENEDDATE` column
-- iOS 13: `ZACCOUNT4` column
-- iOS 12: `ZSERVERRECORDDATA` column
-- iOS 11: `Z_11NOTES` table
+- macOS 15 (Sequoia): `ZNEEDSTOFETCHUSERSPECIFICRECORDASSETS` column
+- macOS 15 (Sequoia): `ZUNAPPLIEDENCRYPTEDRECORDDATA` column  
+- macOS 14 (Sonoma): `ZGENERATION` column
+- macOS 13 (Ventura): `ZACCOUNT6` column
+- macOS 12 (Monterey): `ZACCOUNT5` column
+- macOS 11 (Big Sur): `ZLASTOPENEDDATE` column
+- macOS 10.15 (Catalina): `ZACCOUNT4` column
+- macOS 10.14 (Mojave): `ZSERVERRECORDDATA` column
+- macOS 10.12 (Sierra): `Z_11NOTES` table
 - Legacy: Different table structure
 
 ### Tag Extraction
@@ -503,7 +503,7 @@ apple-notes-parser/
 
 ### Adding Support for New Database Versions
 
-The library is designed to be extensible for future macOS/iOS versions:
+The library is designed to be extensible for future macOS versions:
 
 1. **Add new test database:**
    ```bash

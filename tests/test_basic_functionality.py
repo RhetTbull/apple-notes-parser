@@ -57,12 +57,12 @@ class TestBasicFunctionality:
             }
             assert folder_names == expected_names
 
-    def test_ios_version_detection(self, real_database):
-        """Test iOS version detection based on database schema."""
+    def test_macos_version_detection(self, real_database):
+        """Test macOS version detection based on database schema."""
         with AppleNotesDatabase(real_database) as db:
-            ios_version = db.get_ios_version()
-            # Real macOS 15 database should detect as iOS 18
-            assert ios_version == 18
+            macos_version = db.get_macos_version()
+            # Real macOS 15 database should detect as macOS 15
+            assert macos_version == 15
 
     def test_z_uuid_extraction(self, real_database):
         """Test Z_UUID extraction from metadata table."""
