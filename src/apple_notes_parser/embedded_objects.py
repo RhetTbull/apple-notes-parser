@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sqlite3
-from typing import Any
 
 from .exceptions import DatabaseError
 
@@ -54,7 +53,7 @@ class EmbeddedObjectExtractor:
             # The relationship varies by iOS version - try multiple fields
             # ZNOTE1 seems to be used for hashtags in newer versions
             query = """
-            SELECT 
+            SELECT
                 obj.ZTYPEUTI1,
                 obj.ZALTTEXT,
                 obj.ZTOKENCONTENTIDENTIFIER
@@ -135,8 +134,8 @@ class EmbeddedObjectExtractor:
 
             query = """
             SELECT DISTINCT ZALTTEXT
-            FROM ZICCLOUDSYNCINGOBJECT 
-            WHERE ZTYPEUTI1 = ? 
+            FROM ZICCLOUDSYNCINGOBJECT
+            WHERE ZTYPEUTI1 = ?
                 AND ZALTTEXT IS NOT NULL
             """
 
@@ -150,7 +149,7 @@ class EmbeddedObjectExtractor:
                     if tag:
                         hashtags.append(tag)
 
-            return sorted(list(set(hashtags)))
+            return sorted(set(hashtags))
 
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to get all hashtags: {e}")
@@ -176,8 +175,8 @@ class EmbeddedObjectExtractor:
 
             query = """
             SELECT DISTINCT ZALTTEXT
-            FROM ZICCLOUDSYNCINGOBJECT 
-            WHERE ZTYPEUTI1 = ? 
+            FROM ZICCLOUDSYNCINGOBJECT
+            WHERE ZTYPEUTI1 = ?
                 AND ZALTTEXT IS NOT NULL
             """
 
@@ -191,7 +190,7 @@ class EmbeddedObjectExtractor:
                     if mention:
                         mentions.append(mention)
 
-            return sorted(list(set(mentions)))
+            return sorted(set(mentions))
 
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to get all mentions: {e}")
@@ -223,8 +222,8 @@ class EmbeddedObjectExtractor:
 
             query = """
             SELECT DISTINCT COALESCE(ZNOTE, ZNOTE1, ZATTACHMENT) as note_id
-            FROM ZICCLOUDSYNCINGOBJECT 
-            WHERE ZTYPEUTI1 = ? 
+            FROM ZICCLOUDSYNCINGOBJECT
+            WHERE ZTYPEUTI1 = ?
                 AND ZALTTEXT IN (?, ?)
                 AND (ZNOTE IS NOT NULL OR ZNOTE1 IS NOT NULL OR ZATTACHMENT IS NOT NULL)
             """
@@ -258,8 +257,8 @@ class EmbeddedObjectExtractor:
 
             query = """
             SELECT ZALTTEXT, COUNT(DISTINCT COALESCE(ZNOTE, ZNOTE1, ZATTACHMENT)) as note_count
-            FROM ZICCLOUDSYNCINGOBJECT 
-            WHERE ZTYPEUTI1 = ? 
+            FROM ZICCLOUDSYNCINGOBJECT
+            WHERE ZTYPEUTI1 = ?
                 AND ZALTTEXT IS NOT NULL
                 AND (ZNOTE IS NOT NULL OR ZNOTE1 IS NOT NULL OR ZATTACHMENT IS NOT NULL)
             GROUP BY ZALTTEXT

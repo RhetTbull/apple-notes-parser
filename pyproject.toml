@@ -14,7 +14,67 @@ dev = [
     "pytest>=8.0.0",
     "pytest-cov>=4.0.0",
     "clirunner>=0.2.0",
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
 ]
 
 [project.scripts]
 apple-notes-parser = "apple_notes_parser.cli:main"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long
+    "E722",  # bare except statements (used for defensive coding)
+    "B904",  # exception chaining (not always necessary for custom exceptions)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["apple_notes_parser"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = "apple_notes_parser.notestore_pb2"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "apple_notes_parser.protobuf_parser"
+disable_error_code = ["attr-defined", "no-any-return"]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.17.1",
+    "ruff>=0.12.7",
+    "types-protobuf>=6.30.2.20250703",
+]

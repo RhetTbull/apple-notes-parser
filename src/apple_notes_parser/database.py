@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import gzip
-import os
 import sqlite3
 from datetime import datetime
 from pathlib import Path
@@ -90,7 +89,7 @@ class AppleNotesDatabase:
             f"Searched locations: {[str(p) for p in possible_paths]}"
         )
 
-    def __enter__(self):
+    def __enter__(self) -> AppleNotesDatabase:
         """Context manager entry.
 
         Returns:
@@ -99,7 +98,12 @@ class AppleNotesDatabase:
         self.connect()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: object,
+    ) -> None:
         """Context manager exit.
 
         Args:
@@ -109,7 +113,7 @@ class AppleNotesDatabase:
         """
         self.close()
 
-    def connect(self):
+    def connect(self) -> None:
         """Connect to the SQLite database.
 
         Establishes connection and initializes embedded object extractor.
@@ -129,7 +133,7 @@ class AppleNotesDatabase:
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to connect to database: {e}")
 
-    def close(self):
+    def close(self) -> None:
         """Close database connection.
 
         Safely closes the SQLite connection if it exists.
@@ -138,7 +142,7 @@ class AppleNotesDatabase:
             self.connection.close()
             self.connection = None
 
-    def _ensure_connected(self):
+    def _ensure_connected(self) -> None:
         """Ensure database connection exists.
 
         Creates a new connection if one doesn't already exist.
@@ -154,6 +158,7 @@ class AppleNotesDatabase:
                        or no UUID is found.
         """
         self._ensure_connected()
+        assert self.connection is not None
         cursor = self.connection.cursor()
 
         try:
@@ -180,6 +185,7 @@ class AppleNotesDatabase:
             return self._ios_version
 
         self._ensure_connected()
+        assert self.connection is not None
         cursor = self.connection.cursor()
 
         try:
@@ -229,6 +235,7 @@ class AppleNotesDatabase:
             DatabaseError: If account retrieval fails due to database access issues.
         """
         self._ensure_connected()
+        assert self.connection is not None
         cursor = self.connection.cursor()
 
         try:
@@ -281,6 +288,7 @@ class AppleNotesDatabase:
             DatabaseError: If folder retrieval fails due to database access issues.
         """
         self._ensure_connected()
+        assert self.connection is not None
         cursor = self.connection.cursor()
 
         try:
@@ -336,19 +344,20 @@ class AppleNotesDatabase:
             DatabaseError: If attachment retrieval fails due to database access issues.
         """
         self._ensure_connected()
+        assert self.connection is not None
         cursor = self.connection.cursor()
 
         try:
-            ios_version = self.get_ios_version()
-            z_uuid = self.get_z_uuid()
+            self.get_ios_version()
+            self.get_z_uuid()
 
             # Query for attachment records
             # Attachments are stored as ZICCLOUDSYNCINGOBJECT records with ZNOTE pointing to the parent note
             query = """
-            SELECT 
+            SELECT
                 obj.Z_PK,
                 COALESCE(obj.ZFILENAME, obj.ZTITLE) as filename,
-                obj.ZFILESIZE, 
+                obj.ZFILESIZE,
                 obj.ZTYPEUTI,
                 obj.ZNOTE,
                 obj.ZCREATIONDATE,
@@ -356,7 +365,7 @@ class AppleNotesDatabase:
                 obj.ZIDENTIFIER,
                 obj.ZREMOTEFILEURLSTRING
             FROM ZICCLOUDSYNCINGOBJECT obj
-            WHERE obj.ZNOTE IS NOT NULL 
+            WHERE obj.ZNOTE IS NOT NULL
                 AND (obj.ZFILENAME IS NOT NULL OR obj.ZTITLE IS NOT NULL OR obj.ZFILESIZE > 0 OR obj.ZTYPEUTI IS NOT NULL)
                 AND obj.ZTITLE1 IS NULL
                 AND (obj.ZTYPEUTI IS NOT NULL AND obj.ZTYPEUTI != '')
@@ -411,6 +420,7 @@ class AppleNotesDatabase:
             DatabaseError: If note retrieval fails due to database access issues.
         """
         self._ensure_connected()
+        assert self.connection is not None
         cursor = self.connection.cursor()
 
         try:
@@ -419,7 +429,7 @@ class AppleNotesDatabase:
 
             # Get all attachments first and organize by note_id
             attachments_list = self.get_attachments(accounts)
-            attachments_by_note = {}
+            attachments_by_note: dict[int, list[Attachment]] = {}
             for attachment in attachments_list:
                 if attachment.note_id not in attachments_by_note:
                     attachments_by_note[attachment.note_id] = []
@@ -478,6 +488,8 @@ class AppleNotesDatabase:
                     # Extract embedded objects (hashtags, mentions, links) from database
                     embedded_objects = (
                         self._embedded_extractor.get_embedded_objects_for_note(row[1])
+                        if self._embedded_extractor
+                        else {}
                     )
 
                     # Combine hashtags from both protobuf content and embedded objects
@@ -552,6 +564,8 @@ class AppleNotesDatabase:
         Returns:
             list[Note]: List of Note objects from the legacy database format.
         """
+        self._ensure_connected()
+        assert self.connection is not None
         cursor = self.connection.cursor()
         z_uuid = self.get_z_uuid()  # Get Z_UUID for AppleScript ID construction
 
@@ -655,17 +669,17 @@ class AppleNotesDatabase:
             # Core Data timestamps are seconds since January 1, 2001 00:00:00 UTC
             # Unix timestamps are seconds since January 1, 1970 00:00:00 UTC
             # The difference is 978307200 seconds (31 years)
-            
+
             # Skip invalid timestamps (0, negative, or extremely large values)
             if core_time <= 0 or core_time > 2147483647:  # Max 32-bit timestamp
                 return None
-                
+
             unix_timestamp = core_time + 978307200
-            
+
             # Additional validation for reasonable date range (1970-2100)
             if unix_timestamp < 0 or unix_timestamp > 4102444800:  # Year 2100
                 return None
-                
+
             return datetime.fromtimestamp(unix_timestamp)
         except (ValueError, OSError, OverflowError):
             # Handle invalid timestamps gracefully

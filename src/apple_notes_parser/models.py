@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -233,7 +232,7 @@ class Note:
     links: list[str] = field(default_factory=list)
     attachments: list[Attachment] = field(default_factory=list)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Extract tags from content after initialization.
 
         This method is called automatically after dataclass initialization
@@ -242,7 +241,7 @@ class Note:
         if self.content:
             self._extract_tags()
 
-    def _extract_tags(self):
+    def _extract_tags(self) -> None:
         """Extract hashtags from note content.
 
         Note:

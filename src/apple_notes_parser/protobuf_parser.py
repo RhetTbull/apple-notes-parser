@@ -9,7 +9,7 @@ from typing import Any
 from google.protobuf.message import DecodeError
 
 from .exceptions import ProtobufError
-from .notestore_pb2 import MergableDataProto, NoteStoreProto
+from .notestore_pb2 import NoteStoreProto
 
 
 class ProtobufParser:
@@ -63,6 +63,8 @@ class ProtobufParser:
 
         except Exception as e:
             raise ProtobufError(f"Failed to extract note text: {e}")
+
+        return None
 
     @staticmethod
     def _extract_text_fallback(data: bytes) -> str | None:

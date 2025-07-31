@@ -341,7 +341,7 @@ class AppleNotesParser:
         all_tags = set()
         for note in self.notes:
             all_tags.update(note.tags)
-        return sorted(list(all_tags))
+        return sorted(all_tags)
 
     def get_all_mentions(self) -> list[str]:
         """Get all unique mentions across all notes.
@@ -352,7 +352,7 @@ class AppleNotesParser:
         all_mentions = set()
         for note in self.notes:
             all_mentions.update(note.mentions)
-        return sorted(list(all_mentions))
+        return sorted(all_mentions)
 
     def get_tag_counts(self) -> dict[str, int]:
         """Get count of notes for each tag.
@@ -375,7 +375,7 @@ class AppleNotesParser:
             pass  # Fall back to note-based counting
 
         # Fallback: count from loaded notes
-        tag_counts = {}
+        tag_counts: dict[str, int] = {}
         for note in self.notes:
             for tag in note.tags:
                 tag_counts[tag] = tag_counts.get(tag, 0) + 1
@@ -388,7 +388,7 @@ class AppleNotesParser:
             dict[str, int]: Dictionary mapping folder names to the number of notes
                           in each folder, sorted by folder name.
         """
-        folder_counts = {}
+        folder_counts: dict[str, int] = {}
         for note in self.notes:
             folder_name = note.folder.name
             folder_counts[folder_name] = folder_counts.get(folder_name, 0) + 1
@@ -401,7 +401,7 @@ class AppleNotesParser:
             dict[str, int]: Dictionary mapping account names to the number of notes
                           in each account, sorted by account name.
         """
-        account_counts = {}
+        account_counts: dict[str, int] = {}
         for note in self.notes:
             account_name = note.account.name
             account_counts[account_name] = account_counts.get(account_name, 0) + 1

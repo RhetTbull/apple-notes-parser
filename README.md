@@ -1,20 +1,20 @@
 # Apple Notes Parser
 
-A Python library for reading and parsing Apple Notes SQLite databases. This library can extract all data from Notes SQLite stores, including support for reading tags on notes and finding notes that have specific tags.
+A Python library for reading and parsing Apple Notes SQLite databases. This library extracts data from Apple Notes SQLite stores, including support for reading tags on notes and finding notes that have specific tags.
 
 ## Features
 
--  **Full Database Parsing**: Read all accounts, folders, and notes from Apple Notes databases
--  **Protobuf Support**: Parse compressed note data using Protocol Buffers
--  **Tag Extraction**: Automatically extract hashtags from note content
--  **Tag Filtering**: Find notes by specific tags or combinations of tags
--  **Mention Support**: Extract and search for @mentions in notes
--  **Link Extraction**: Find and filter notes containing URLs
-- ✅ **Attachment Support**: Extract attachment metadata and filter notes by attachment type
--  **Multi-Version Support**: Works with iOS 9+ and macOS Notes databases
--  **Search Functionality**: Full-text search across note content
--  **Export Capabilities**: Export data to JSON format
--  **Metadata Access**: Access creation dates, modification dates, pinned status, etc.
+- **Full Database Parsing**: Read all accounts, folders, and notes from Apple Notes databases
+- **Protobuf Support**: Parse compressed note data using Protocol Buffers
+- **Tag Extraction**: Automatically extract hashtags from note content
+- **Tag Filtering**: Find notes by specific tags or combinations of tags
+- **Mention Support**: Extract and search for @mentions in notes
+- **Link Extraction**: Find and filter notes containing URLs
+- **Attachment Support**: Extract attachment metadata and filter notes by attachment type
+- **Multi-Version Support**: Works with iOS 9+ and macOS Notes databases
+- **Search Functionality**: Full-text search across note content
+- **Export Capabilities**: Export data to JSON format
+- **Metadata Access**: Access creation dates, modification dates, pinned status, etc.
 
 ## Installation
 
@@ -40,7 +40,7 @@ pip install -e .
 from apple_notes_parser import AppleNotesParser
 
 # Initialize parser with your Notes database
-parser = AppleNotesParser("/path/to/NoteStore.sqlite")
+parser = AppleNotesParser()
 
 # Load all data
 parser.load_data()
@@ -64,18 +64,8 @@ print(f"All tags: {', '.join(all_tags)}")
 
 The Apple Notes database is typically located at:
 
-**macOS:**
 ```
 ~/Library/Group Containers/group.com.apple.notes/NoteStore.sqlite
-```
-
-**iOS (from backup):**
-```
-# iTunes Backup
-~/Library/Application Support/MobileSync/Backup/<device-id>/4f/4f98687d8ab0d6d1a371110e6b7300f6e465bef2
-
-# Physical/SSH access
-/private/var/mobile/Library/Notes/NoteStore.sqlite
 ```
 
 ## API Reference
@@ -89,14 +79,14 @@ Main parser class for Apple Notes databases.
 **Methods:**
 
 - `load_data()` - Load all data from the database
-- `notes` - Get all notes (List[Note])
-- `folders` - Get all folders (List[Folder])
-- `accounts` - Get all accounts (List[Account])
+- `notes` - Get all notes (list[Note])
+- `folders` - Get all folders (list[Folder])
+- `accounts` - Get all accounts (list[Account])
 
 ### Tag and Content Filtering
 
 - `get_notes_by_tag(tag: str)` - Get notes with a specific tag
-- `get_notes_by_tags(tags: List[str], match_all: bool = False)` - Get notes with multiple tags
+- `get_notes_by_tags(tags: list[str], match_all: bool = False)` - Get notes with multiple tags
 - `get_all_tags()` - Get all unique hashtags
 - `get_tag_counts()` - Get usage count for each tag
 
@@ -105,6 +95,7 @@ Main parser class for Apple Notes databases.
 - `search_notes(query: str, case_sensitive: bool = False)` - Full-text search
 - `get_notes_by_folder(folder_name: str)` - Get notes in specific folder
 - `get_notes_by_account(account_name: str)` - Get notes in specific account
+- `get_note_by_applescript_id(applescript_id: str)` - Get note by AppleScript ID (e.g. "x-coredata://5A2C18B7-767B-41A9-BF71-E4E966775D32/ICNote/p4884")
 - `get_pinned_notes()` - Get all pinned notes
 - `get_protected_notes()` - Get password-protected notes
 - `filter_notes(filter_func: Callable[[Note], bool])` - Custom filtering
@@ -140,10 +131,11 @@ Main parser class for Apple Notes databases.
 - `is_pinned: bool` - Whether note is pinned
 - `is_password_protected: bool` - Whether note is encrypted
 - `uuid: str` - Unique identifier
-- `tags: List[str]` - Hashtags found in note
-- `mentions: List[str]` - @mentions found in note
-- `links: List[str]` - URLs found in note
-- `attachments: List[Attachment]` - File attachments in note
+- `applescript_id: str` - AppleScript ID of the note (this is the unique identifier used by AppleScript to interact with the note)
+- `tags: list[str]` - Hashtags found in note
+- `mentions: list[str]` - @mentions found in note
+- `links: list[str]` - URLs found in note
+- `attachments: list[Attachment]` - File attachments in note
 
 #### `Folder`
 - `id: int` - Database primary key
@@ -206,7 +198,7 @@ meeting_notes = parser.search_notes("meeting")
 
 # Custom filtering
 recent_notes = parser.filter_notes(
-    lambda note: note.modification_date and 
+    lambda note: note.modification_date and
                  note.modification_date > datetime.now() - timedelta(days=7)
 )
 
@@ -249,7 +241,7 @@ for note in notes_with_attachments:
         print(f"    MIME: {attachment.mime_type}")
         print(f"    Is Image: {attachment.is_image}")
         print(f"    Is Document: {attachment.is_document}")
-        
+
         # Filter by file extension
         if attachment.file_extension == "pdf":
             print(f"    Found PDF: {attachment.filename}")
@@ -282,7 +274,7 @@ The library uses Protocol Buffers to parse compressed note data. It can handle:
 Automatically detects iOS/macOS version based on database schema:
 
 - iOS 18: `ZUNAPPLIEDENCRYPTEDRECORDDATA` column
-- iOS 17: `ZGENERATION` column  
+- iOS 17: `ZGENERATION` column
 - iOS 16: `ZACCOUNT6` column
 - iOS 15: `ZACCOUNT5` column
 - iOS 14: `ZLASTOPENEDDATE` column
@@ -315,7 +307,7 @@ For using the library (end users), you only need:
 - Dependencies are automatically installed via `uv` or `pip`
 
 For development and building, you need:
-- Python 3.11+  
+- Python 3.11+
 - `uv` package manager (recommended) or `pip`
 - `grpcio-tools` (for protobuf code generation, if needed)
 
@@ -354,6 +346,85 @@ uv run pytest tests/test_real_database.py
 # Run tests with coverage
 uv run pytest --cov=apple_notes_parser
 ```
+
+### Code Quality and Linting
+
+The project uses modern Python tooling for code quality assurance:
+
+#### Running Ruff (Linting and Formatting)
+
+[Ruff](https://docs.astral.sh/ruff/) is used for fast linting and import sorting:
+
+```bash
+# Check for linting issues
+uv run ruff check src/
+
+# Automatically fix linting issues (safe fixes only)
+uv run ruff check --fix src/
+
+# Apply formatting
+uv run ruff format src/
+
+# Check imports are properly sorted
+uv run ruff check --select I src/
+```
+
+#### Running MyPy (Type Checking)
+
+[MyPy](https://mypy.readthedocs.io/) is used for static type checking:
+
+```bash
+# Run type checking on the entire codebase
+uv run mypy src/apple_notes_parser/
+
+# Run type checking with verbose output
+uv run mypy --verbose src/apple_notes_parser/
+
+# Check specific file
+uv run mypy src/apple_notes_parser/parser.py
+```
+
+#### Pre-commit Workflow
+
+Before submitting code, run the complete quality check:
+
+```bash
+# Run all quality checks
+uv run ruff check src/
+uv run ruff format src/
+uv run mypy src/apple_notes_parser/
+uv run pytest
+
+# Or create a simple script to run all checks
+cat > check.sh << 'EOF'
+#!/bin/bash
+echo "🔍 Running Ruff linting..."
+uv run ruff check src/
+
+echo "🎨 Running Ruff formatting..."
+uv run ruff format src/
+
+echo "🔬 Running MyPy type checking..."
+uv run mypy src/apple_notes_parser/
+
+echo "🧪 Running tests..."
+uv run pytest
+
+echo "✅ All checks completed!"
+EOF
+
+chmod +x check.sh
+./check.sh
+```
+
+#### Configuration
+
+The linting and type checking are configured in `pyproject.toml`:
+
+- **Ruff**: Configured for Python 3.11+ with automatic import sorting
+- **MyPy**: Strict type checking with proper overrides for generated protobuf files
+- **Line length**: Ignored to allow natural code formatting
+- **Exception handling**: Defensive patterns are allowed (bare `except` and custom exception chains)
 
 ### Protobuf Code Generation
 
@@ -406,7 +477,7 @@ The automated script will:
 apple-notes-parser/
 ├── src/apple_notes_parser/
 │   ├── __init__.py              # Main package exports
-│   ├── parser.py                # Main AppleNotesParser class  
+│   ├── parser.py                # Main AppleNotesParser class
 │   ├── database.py              # SQLite database operations
 │   ├── models.py                # Data models (Note, Folder, Account)
 │   ├── protobuf_parser.py       # Protobuf parsing logic
@@ -488,6 +559,9 @@ The project uses these key dependencies:
 - **Development dependencies** (for contributors):
   - `pytest>=8.0.0` - Testing framework
   - `pytest-cov>=4.0.0` - Coverage reporting
+  - `ruff>=0.8.0` - Fast Python linter and formatter
+  - `mypy>=1.13.0` - Static type checker
+  - `types-protobuf>=6.30.2.20250703` - Type stubs for protobuf
 
 ### Troubleshooting
 
@@ -512,7 +586,13 @@ Contributions are welcome! Please feel free to submit pull requests or open issu
 
 1. **Fork the repository** and create a feature branch
 2. **Write tests** for any new functionality
-3. **Ensure all tests pass** with `uv run pytest`
+3. **Run quality checks** before submitting:
+   ```bash
+   uv run ruff check src/          # Linting
+   uv run ruff format src/         # Formatting
+   uv run mypy src/apple_notes_parser/  # Type checking
+   uv run pytest                   # Tests
+   ```
 4. **Follow existing code style** and patterns
 5. **Update documentation** for user-facing changes
 6. **Submit a pull request** with a clear description
