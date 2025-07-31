@@ -1,7 +1,7 @@
 [project]
 name = "apple-notes-parser"
 version = "0.1.0"
-description = "Add your description here"
+description = "A Python library for reading and parsing Apple Notes SQLite databases with comprehensive CLI tools"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -14,3 +14,6 @@ dev = [
     "pytest>=8.0.0",
     "pytest-cov>=4.0.0",
 ]
+
+[project.scripts]
+apple-notes-parser = "apple_notes_parser.cli:main"

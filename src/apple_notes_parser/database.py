@@ -638,7 +638,7 @@ class AppleNotesDatabase:
         except Exception:
             return None
 
-    def _convert_core_time(self, core_time: float) -> datetime:
+    def _convert_core_time(self, core_time: float) -> datetime | None:
         """Convert Core Data timestamp to Python datetime.
 
         Core Data timestamps are seconds since January 1, 2001 00:00:00 UTC.
@@ -649,10 +649,24 @@ class AppleNotesDatabase:
             core_time: Core Data timestamp as a float.
 
         Returns:
-            datetime: Converted datetime object in local timezone.
+            datetime | None: Converted datetime object in local timezone, or None if invalid.
         """
-        # Core Data timestamps are seconds since January 1, 2001 00:00:00 UTC
-        # Unix timestamps are seconds since January 1, 1970 00:00:00 UTC
-        # The difference is 978307200 seconds (31 years)
-        unix_timestamp = core_time + 978307200
-        return datetime.fromtimestamp(unix_timestamp)
+        try:
+            # Core Data timestamps are seconds since January 1, 2001 00:00:00 UTC
+            # Unix timestamps are seconds since January 1, 1970 00:00:00 UTC
+            # The difference is 978307200 seconds (31 years)
+            
+            # Skip invalid timestamps (0, negative, or extremely large values)
+            if core_time <= 0 or core_time > 2147483647:  # Max 32-bit timestamp
+                return None
+                
+            unix_timestamp = core_time + 978307200
+            
+            # Additional validation for reasonable date range (1970-2100)
+            if unix_timestamp < 0 or unix_timestamp > 4102444800:  # Year 2100
+                return None
+                
+            return datetime.fromtimestamp(unix_timestamp)
+        except (ValueError, OSError, OverflowError):
+            # Handle invalid timestamps gracefully
+            return None
