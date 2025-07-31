@@ -22,15 +22,15 @@ def test_parser_initialization_with_nonexistent_file():
         AppleNotesParser("nonexistent.sqlite")
 
 
-def test_database_initialization_with_valid_file(real_database):
+def test_database_initialization_with_valid_file(test_database):
     """Test database initialization with valid file."""
-    db = AppleNotesDatabase(real_database)
+    db = AppleNotesDatabase(test_database)
     assert db.database_path.exists()
 
 
-def test_account_loading(real_database):
+def test_account_loading(test_database):
     """Test loading accounts from database."""
-    with AppleNotesDatabase(real_database) as db:
+    with AppleNotesDatabase(test_database) as db:
         accounts = db.get_accounts()
         assert len(accounts) >= 1
         # Find the "On My Mac" account
@@ -38,9 +38,9 @@ def test_account_loading(real_database):
         assert on_my_mac is not None
 
 
-def test_folder_loading(real_database):
+def test_folder_loading(test_database):
     """Test loading folders from database directly."""
-    with AppleNotesDatabase(real_database) as db:
+    with AppleNotesDatabase(test_database) as db:
         accounts_list = db.get_accounts()
         accounts_dict = {acc.id: acc for acc in accounts_list}
         folders_list = db.get_folders(accounts_dict)
@@ -58,24 +58,24 @@ def test_folder_loading(real_database):
         assert folder_names == expected_names
 
 
-def test_macos_version_detection(real_database):
+def test_macos_version_detection(test_database):
     """Test macOS version detection based on database schema."""
-    with AppleNotesDatabase(real_database) as db:
+    with AppleNotesDatabase(test_database) as db:
         macos_version = db.get_macos_version()
         # Real macOS 15 database should detect as macOS 15
         assert macos_version == 15
 
 
-def test_z_uuid_extraction(real_database):
+def test_z_uuid_extraction(test_database):
     """Test Z_UUID extraction from metadata table."""
-    with AppleNotesDatabase(real_database) as db:
+    with AppleNotesDatabase(test_database) as db:
         z_uuid = db.get_z_uuid()
         assert z_uuid == "09FBEB4A-5B24-424E-814B-4AE8E757FB83"
 
 
-def test_folders_dict_property(real_database):
+def test_folders_dict_property(test_database):
     """Test folders_dict property provides correct mapping."""
-    with AppleNotesDatabase(real_database) as db:
+    with AppleNotesDatabase(test_database) as db:
         accounts_list = db.get_accounts()
         accounts_dict = {acc.id: acc for acc in accounts_list}
         folders_list = db.get_folders(accounts_dict)
@@ -89,9 +89,9 @@ def test_folders_dict_property(real_database):
             assert folders_dict[folder.id] == folder
 
 
-def test_export_structure(real_database):
+def test_export_structure(test_database):
     """Test that basic database structure can be read."""
-    with AppleNotesDatabase(real_database) as db:
+    with AppleNotesDatabase(test_database) as db:
         accounts_list = db.get_accounts()
         folders_list = db.get_folders({acc.id: acc for acc in accounts_list})
 
@@ -147,9 +147,9 @@ def test_database_error_propagation():
         AppleNotesParser("/nonexistent/path/database.sqlite")
 
 
-def test_context_manager_cleanup(real_database):
+def test_context_manager_cleanup(test_database):
     """Test that database context manager properly cleans up."""
-    db = AppleNotesDatabase(real_database)
+    db = AppleNotesDatabase(test_database)
 
     # Should work in context manager
     with db:

@@ -249,15 +249,15 @@ def test_folder_path_reconstruction(database_with_connection):
         assert folder_path == expected_path
 
 
-def test_parser_initialization_with_real_db(real_database):
+def test_parser_initialization_with_real_db(test_database):
     """Test parser can initialize with real database."""
-    parser = AppleNotesParser(real_database)
+    parser = AppleNotesParser(test_database)
     assert parser.database_path.exists()
 
 
-def test_parser_data_loading(real_database, database_metadata):
+def test_parser_data_loading(test_database, database_metadata):
     """Test parser can load all data from real database."""
-    parser = AppleNotesParser(real_database)
+    parser = AppleNotesParser(test_database)
     parser.load_data()
 
     assert len(parser.accounts) >= 1
@@ -265,9 +265,9 @@ def test_parser_data_loading(real_database, database_metadata):
     assert len(parser.notes) == database_metadata["total_notes"]
 
 
-def test_tag_functionality(real_database, sample_notes_data):
+def test_tag_functionality(test_database, sample_notes_data):
     """Test tag extraction and search functionality."""
-    parser = AppleNotesParser(real_database)
+    parser = AppleNotesParser(test_database)
 
     # Get all tags
     all_tags = parser.get_all_tags()
@@ -284,9 +284,9 @@ def test_tag_functionality(real_database, sample_notes_data):
             assert isinstance(notes_with_tag, list)
 
 
-def test_password_protection_detection(real_database):
+def test_password_protection_detection(test_database):
     """Test detection of password-protected notes."""
-    parser = AppleNotesParser(real_database)
+    parser = AppleNotesParser(test_database)
 
     protected_notes = parser.get_protected_notes()
     assert isinstance(protected_notes, list)
@@ -299,9 +299,9 @@ def test_password_protection_detection(real_database):
     assert "This note is password protected" in protected_titles
 
 
-def test_search_functionality(real_database):
+def test_search_functionality(test_database):
     """Test note search functionality."""
-    parser = AppleNotesParser(real_database)
+    parser = AppleNotesParser(test_database)
 
     # Search for specific text that should exist
     results = parser.search_notes("subfolder")
@@ -316,9 +316,9 @@ def test_search_functionality(real_database):
     assert len(results_title) >= 1
 
 
-def test_export_functionality(real_database):
+def test_export_functionality(test_database):
     """Test data export functionality."""
-    parser = AppleNotesParser(real_database)
+    parser = AppleNotesParser(test_database)
 
     export_data = parser.export_notes_to_dict(include_content=True)
 
@@ -342,9 +342,9 @@ def test_export_functionality(real_database):
         assert "09FBEB4A-5B24-424E-814B-4AE8E757FB83" in note_data["applescript_id"]
 
 
-def test_attachment_functionality(real_database, sample_notes_data):
+def test_attachment_functionality(test_database, sample_notes_data):
     """Test attachment extraction and search functionality."""
-    parser = AppleNotesParser(real_database)
+    parser = AppleNotesParser(test_database)
 
     # Test notes with attachments
     notes_with_attachments = parser.get_notes_with_attachments()
@@ -408,9 +408,9 @@ def test_attachment_functionality(real_database, sample_notes_data):
     assert not pdf_attachment.is_audio
 
 
-def test_attachment_export(real_database):
+def test_attachment_export(test_database):
     """Test that attachments are included in export data."""
-    parser = AppleNotesParser(real_database)
+    parser = AppleNotesParser(test_database)
 
     export_data = parser.export_notes_to_dict(include_content=True)
 
@@ -462,9 +462,9 @@ def test_attachment_export(real_database):
     assert first_attachment["is_image"] is False
 
 
-def test_get_note_by_applescript_id(real_database, sample_notes_data):
+def test_get_note_by_applescript_id(test_database, sample_notes_data):
     """Test getting a note by its AppleScript ID."""
-    parser = AppleNotesParser(real_database)
+    parser = AppleNotesParser(test_database)
 
     # Test with a known AppleScript ID from sample data
     expected_applescript_id = sample_notes_data["tagged_note"]["applescript_id"]

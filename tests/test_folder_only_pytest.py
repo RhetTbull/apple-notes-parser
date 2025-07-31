@@ -15,18 +15,18 @@ from apple_notes_parser.models import Account, Folder
 class TestFolderOnly:
     """Test folder functionality without requiring notes."""
 
-    def test_account_loading(self, real_database):
+    def test_account_loading(self, test_database):
         """Test loading accounts from database."""
-        with AppleNotesDatabase(real_database) as db:
+        with AppleNotesDatabase(test_database) as db:
             accounts = db.get_accounts()
             assert len(accounts) == 1
             # Find the "On My Mac" account
             on_my_mac = next((acc for acc in accounts if acc.name == "On My Mac"), None)
             assert on_my_mac is not None
 
-    def test_folder_loading(self, real_database):
+    def test_folder_loading(self, test_database):
         """Test loading folders from database."""
-        with AppleNotesDatabase(real_database) as db:
+        with AppleNotesDatabase(test_database) as db:
             accounts_list = db.get_accounts()
             accounts_dict = {acc.id: acc for acc in accounts_list}
             folders_list = db.get_folders(accounts_dict)
@@ -43,9 +43,9 @@ class TestFolderOnly:
             }
             assert folder_names == expected_names
 
-    def test_folder_parent_extraction(self, real_database):
+    def test_folder_parent_extraction(self, test_database):
         """Test that folder parent IDs are extracted correctly."""
-        with AppleNotesDatabase(real_database) as db:
+        with AppleNotesDatabase(test_database) as db:
             accounts_list = db.get_accounts()
             accounts_dict = {acc.id: acc for acc in accounts_list}
             folders_list = db.get_folders(accounts_dict)
@@ -66,9 +66,9 @@ class TestFolderOnly:
             )
             assert not folders_by_name["Subfolder"].is_root()
 
-    def test_folder_path_construction(self, real_database):
+    def test_folder_path_construction(self, test_database):
         """Test that folder paths are constructed correctly."""
-        with AppleNotesDatabase(real_database) as db:
+        with AppleNotesDatabase(test_database) as db:
             accounts_list = db.get_accounts()
             accounts_dict = {acc.id: acc for acc in accounts_list}
             folders_list = db.get_folders(accounts_dict)
@@ -91,9 +91,9 @@ class TestFolderOnly:
                     f"Expected {expected_path}, got {actual_path}"
                 )
 
-    def test_folder_parent_navigation(self, real_database):
+    def test_folder_parent_navigation(self, test_database):
         """Test folder parent navigation methods."""
-        with AppleNotesDatabase(real_database) as db:
+        with AppleNotesDatabase(test_database) as db:
             accounts_list = db.get_accounts()
             accounts_dict = {acc.id: acc for acc in accounts_list}
             folders_list = db.get_folders(accounts_dict)
@@ -112,22 +112,22 @@ class TestFolderOnly:
             # Folder2 is a root folder, should have no parent
             assert folder2.get_parent(folders_dict) is None
 
-    def test_macos_version_detection(self, real_database):
+    def test_macos_version_detection(self, test_database):
         """Test macOS version detection based on database schema."""
-        with AppleNotesDatabase(real_database) as db:
+        with AppleNotesDatabase(test_database) as db:
             macos_version = db.get_macos_version()
             # Real macOS 15 database should detect as macOS 15
             assert macos_version == 15
 
-    def test_z_uuid_extraction(self, real_database):
+    def test_z_uuid_extraction(self, test_database):
         """Test Z_UUID extraction from metadata table."""
-        with AppleNotesDatabase(real_database) as db:
+        with AppleNotesDatabase(test_database) as db:
             z_uuid = db.get_z_uuid()
             assert z_uuid == "09FBEB4A-5B24-424E-814B-4AE8E757FB83"
 
-    def test_folder_path_without_dict(self, real_database):
+    def test_folder_path_without_dict(self, test_database):
         """Test folder path fallback when no folders_dict is provided."""
-        with AppleNotesDatabase(real_database) as db:
+        with AppleNotesDatabase(test_database) as db:
             accounts_list = db.get_accounts()
             accounts_dict = {acc.id: acc for acc in accounts_list}
             folders_list = db.get_folders(accounts_dict)
@@ -138,9 +138,9 @@ class TestFolderOnly:
             assert folders_by_name["Subsubfolder"].get_path(None) == "Subsubfolder"
             assert folders_by_name["Folder2"].get_path(None) == "Folder2"
 
-    def test_root_folder_detection(self, real_database):
+    def test_root_folder_detection(self, test_database):
         """Test detection of root folders."""
-        with AppleNotesDatabase(real_database) as db:
+        with AppleNotesDatabase(test_database) as db:
             accounts_list = db.get_accounts()
             accounts_dict = {acc.id: acc for acc in accounts_list}
             folders_list = db.get_folders(accounts_dict)
@@ -174,9 +174,9 @@ class TestFolderOnly:
         assert root_folder.get_path(folders_dict) == "Root"
         assert child_folder.get_path(folders_dict) == "Root/Child"
 
-    def test_cycle_prevention(self, real_database):
+    def test_cycle_prevention(self, test_database):
         """Test that cycle detection prevents infinite loops."""
-        with AppleNotesDatabase(real_database) as db:
+        with AppleNotesDatabase(test_database) as db:
             accounts_list = db.get_accounts()
             accounts_dict = {acc.id: acc for acc in accounts_list}
             folders_list = db.get_folders(accounts_dict)
@@ -194,14 +194,14 @@ class TestFolderOnly:
 class TestErrorHandling:
     """Test error handling."""
 
-    def real_database_initialization_with_valid_file(self, real_database):
+    def test_database_initialization_with_valid_file(self, test_database):
         """Test database initialization with valid file."""
-        db = AppleNotesDatabase(real_database)
+        db = AppleNotesDatabase(test_database)
         assert db.database_path.exists()
 
-    def test_context_manager_cleanup(self, real_database):
+    def test_context_manager_cleanup(self, test_database):
         """Test that database context manager properly cleans up."""
-        db = AppleNotesDatabase(real_database)
+        db = AppleNotesDatabase(test_database)
 
         # Should work in context manager
         with db:

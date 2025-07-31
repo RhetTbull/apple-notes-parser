@@ -14,8 +14,8 @@ from apple_notes_parser.database import AppleNotesDatabase
 
 
 @pytest.fixture
-def real_database():
-    """Fixture providing path to the real macOS 15 NoteStore database."""
+def test_database():
+    """Fixture providing path to the test macOS 15 NoteStore database."""
     database_path = Path(__file__).parent / "data" / "NoteStore-macOS-15-Seqoia.sqlite"
     if not database_path.exists():
         pytest.skip(f"Real database not found at {database_path}")
@@ -23,9 +23,9 @@ def real_database():
 
 
 @pytest.fixture
-def database_with_connection(real_database):
+def database_with_connection(test_database):
     """Fixture providing a connected AppleNotesDatabase instance."""
-    with AppleNotesDatabase(real_database) as db:
+    with AppleNotesDatabase(test_database) as db:
         yield db
 
 
@@ -128,7 +128,7 @@ def database_metadata():
 @pytest.fixture
 def macos_15_database():
     """Fixture providing path to the macOS 15 NoteStore database."""
-    return real_database()
+    return test_database()
 
 
 @pytest.fixture(params=["macos_15_sequoia", "macos_26_tahoe"])

@@ -14,9 +14,9 @@ from apple_notes_parser.database import AppleNotesDatabase
 class TestFolderHierarchy:
     """Test folder hierarchy and path functionality."""
 
-    def test_folder_parent_extraction(self, real_database):
+    def test_folder_parent_extraction(self, test_database):
         """Test that folder parent IDs are extracted correctly."""
-        with AppleNotesDatabase(real_database) as db:
+        with AppleNotesDatabase(test_database) as db:
             accounts_list = db.get_accounts()
             accounts_dict = {acc.id: acc for acc in accounts_list}
             folders_list = db.get_folders(accounts_dict)
@@ -41,9 +41,9 @@ class TestFolderHierarchy:
             )
             assert not folders_by_name["Subfolder"].is_root()
 
-    def test_folder_path_construction(self, real_database):
+    def test_folder_path_construction(self, test_database):
         """Test that folder paths are constructed correctly."""
-        with AppleNotesDatabase(real_database) as db:
+        with AppleNotesDatabase(test_database) as db:
             accounts_list = db.get_accounts()
             accounts_dict = {acc.id: acc for acc in accounts_list}
             folders_list = db.get_folders(accounts_dict)
@@ -68,9 +68,9 @@ class TestFolderHierarchy:
                 == "Folder2/Subfolder/Subsubfolder"
             )
 
-    def test_folder_parent_navigation(self, real_database):
+    def test_folder_parent_navigation(self, test_database):
         """Test folder parent navigation methods."""
-        with AppleNotesDatabase(real_database) as db:
+        with AppleNotesDatabase(test_database) as db:
             accounts_list = db.get_accounts()
             accounts_dict = {acc.id: acc for acc in accounts_list}
             folders_list = db.get_folders(accounts_dict)
@@ -89,9 +89,9 @@ class TestFolderHierarchy:
             # Folder2 is a root folder, should have no parent
             assert folder2.get_parent(folders_dict) is None
 
-    def test_folder_path_without_dict(self, real_database):
+    def test_folder_path_without_dict(self, test_database):
         """Test folder path fallback when no folders_dict is provided."""
-        with AppleNotesDatabase(real_database) as db:
+        with AppleNotesDatabase(test_database) as db:
             accounts_list = db.get_accounts()
             accounts_dict = {acc.id: acc for acc in accounts_list}
             folders_list = db.get_folders(accounts_dict)
@@ -102,9 +102,9 @@ class TestFolderHierarchy:
             assert folders_by_name["Subsubfolder"].get_path(None) == "Subsubfolder"
             assert folders_by_name["Folder2"].get_path(None) == "Folder2"
 
-    def test_parser_folder_integration(self, real_database):
+    def test_parser_folder_integration(self, test_database):
         """Test folder hierarchy integration with direct database access."""
-        with AppleNotesDatabase(real_database) as db:
+        with AppleNotesDatabase(test_database) as db:
             accounts_list = db.get_accounts()
             accounts_dict = {acc.id: acc for acc in accounts_list}
             folders_list = db.get_folders(accounts_dict)
@@ -129,9 +129,9 @@ class TestFolderHierarchy:
                     f"Expected {expected_path}, got {actual_path}"
                 )
 
-    def test_export_includes_folder_paths(self, real_database):
+    def test_export_includes_folder_paths(self, test_database):
         """Test that folder data includes path information."""
-        with AppleNotesDatabase(real_database) as db:
+        with AppleNotesDatabase(test_database) as db:
             accounts_list = db.get_accounts()
             accounts_dict = {acc.id: acc for acc in accounts_list}
             folders_list = db.get_folders(accounts_dict)
@@ -162,9 +162,9 @@ class TestFolderHierarchy:
                     # These should have parents (Subfolder, Subsubfolder)
                     assert folders_by_name[name].parent_id is not None
 
-    def test_root_folder_detection(self, real_database):
+    def test_root_folder_detection(self, test_database):
         """Test detection of root folders."""
-        with AppleNotesDatabase(real_database) as db:
+        with AppleNotesDatabase(test_database) as db:
             accounts_list = db.get_accounts()
             accounts_dict = {acc.id: acc for acc in accounts_list}
             folders_list = db.get_folders(accounts_dict)
@@ -176,9 +176,9 @@ class TestFolderHierarchy:
             expected_root_names = {"Notes", "Recently Deleted", "Folder", "Folder2"}
             assert root_names == expected_root_names
 
-    def test_cycle_prevention(self, real_database):
+    def test_cycle_prevention(self, test_database):
         """Test that cycle detection prevents infinite loops."""
-        with AppleNotesDatabase(real_database) as db:
+        with AppleNotesDatabase(test_database) as db:
             accounts_list = db.get_accounts()
             accounts_dict = {acc.id: acc for acc in accounts_list}
             folders_list = db.get_folders(accounts_dict)
