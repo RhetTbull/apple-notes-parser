@@ -182,7 +182,7 @@ def test_export_basic(runner, test_database):
         assert "Exported" in result.output
 
         # Verify the JSON file was created and is valid
-        with open(tmp_path, "r") as f:
+        with open(tmp_path) as f:
             data = json.load(f)
             assert "notes" in data
             assert "folders" in data
@@ -418,7 +418,7 @@ def test_full_workflow(runner, test_database):
 
         # Verify export was successful
         assert Path(tmp_path).exists()
-        with open(tmp_path, "r") as f:
+        with open(tmp_path) as f:
             data = json.load(f)
             assert isinstance(data, dict)
     finally:
@@ -431,6 +431,6 @@ def test_all_commands_work(runner, test_database):
 
     for cmd in commands:
         result = runner.invoke(main, ["--database", test_database] + cmd)
-        assert (
-            result.exit_code == 0
-        ), f"Command {cmd} failed with exit code {result.exit_code}"
+        assert result.exit_code == 0, (
+            f"Command {cmd} failed with exit code {result.exit_code}"
+        )

@@ -11,7 +11,7 @@ A Python library for reading and parsing Apple Notes SQLite databases. This libr
 - **Mention Support**: Extract and search for @mentions in notes
 - **Link Extraction**: Find and filter notes containing URLs
 - **Attachment Support**: Extract attachment metadata and filter notes by attachment type
-- **Multi-Version Support**: Works with iOS 9+ and macOS Notes databases
+- **Multi-Version Support**: Works with iOS 9-19+ and macOS Notes databases
 - **Search Functionality**: Full-text search across note content
 - **Export Capabilities**: Export data to JSON format
 - **Metadata Access**: Access creation dates, modification dates, pinned status, etc.
@@ -273,6 +273,7 @@ The library uses Protocol Buffers to parse compressed note data. It can handle:
 
 Automatically detects iOS/macOS version based on database schema:
 
+- iOS 19: `ZNEEDSTOFETCHUSERSPECIFICRECORDASSETS` column
 - iOS 18: `ZUNAPPLIEDENCRYPTEDRECORDDATA` column
 - iOS 17: `ZGENERATION` column
 - iOS 16: `ZACCOUNT6` column

@@ -176,7 +176,7 @@ class AppleNotesDatabase:
         created the database by checking for version-specific columns.
 
         Returns:
-            int: Detected iOS/macOS version number (e.g., 15, 16, 17, 18).
+            int: Detected iOS/macOS version number (e.g., 15, 16, 17, 18, 19).
 
         Raises:
             DatabaseError: If version detection fails due to database access issues.
@@ -193,7 +193,9 @@ class AppleNotesDatabase:
             cursor.execute("PRAGMA table_info(ZICCLOUDSYNCINGOBJECT)")
             columns = [row[1] for row in cursor.fetchall()]
 
-            if "ZUNAPPLIEDENCRYPTEDRECORDDATA" in columns:
+            if "ZNEEDSTOFETCHUSERSPECIFICRECORDASSETS" in columns:
+                self._ios_version = 19
+            elif "ZUNAPPLIEDENCRYPTEDRECORDDATA" in columns:
                 self._ios_version = 18
             elif "ZGENERATION" in columns:
                 self._ios_version = 17
@@ -298,7 +300,7 @@ class AppleNotesDatabase:
                 query = """
                 SELECT Z_PK, ZTITLE2, ZOWNER, ZIDENTIFIER, ZPARENT
                 FROM ZICCLOUDSYNCINGOBJECT
-                WHERE ZTITLE2 IS NOT NULL
+                WHERE ZTITLE2 IS NOT NULL AND ZMARKEDFORDELETION = 0
                 """
             else:
                 query = """

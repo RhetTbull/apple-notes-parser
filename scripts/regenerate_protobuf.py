@@ -12,10 +12,10 @@ This script:
 4. Runs tests to ensure compatibility
 """
 
+import re
 import subprocess
 import sys
 from pathlib import Path
-import re
 
 
 def main():
