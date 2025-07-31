@@ -358,3 +358,23 @@ class TestRealDatabaseWithParser:
         assert first_attachment["file_extension"] == "pdf"
         assert first_attachment["is_document"] is True
         assert first_attachment["is_image"] is False
+
+    def test_get_note_by_applescript_id(self, real_database, sample_notes_data):
+        """Test getting a note by its AppleScript ID."""
+        parser = AppleNotesParser(real_database)
+        
+        # Test with a known AppleScript ID from sample data
+        expected_applescript_id = sample_notes_data["tagged_note"]["applescript_id"]
+        expected_title = sample_notes_data["tagged_note"]["title"]
+        
+        # Get the note by AppleScript ID
+        note = parser.get_note_by_applescript_id(expected_applescript_id)
+        
+        assert note is not None, f"Should find note with AppleScript ID: {expected_applescript_id}"
+        assert note.title == expected_title, f"Expected title '{expected_title}', got '{note.title}'"
+        assert note.applescript_id == expected_applescript_id
+        
+        # Test with non-existent AppleScript ID
+        non_existent_id = "x-coredata://FAKE-UUID/ICNote/p999"
+        note_not_found = parser.get_note_by_applescript_id(non_existent_id)
+        assert note_not_found is None, "Should return None for non-existent AppleScript ID"

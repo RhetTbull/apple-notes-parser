@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from pathlib import Path
 
 from .database import AppleNotesDatabase
 from .exceptions import AppleNotesParserError, DatabaseError
@@ -229,6 +228,21 @@ class AppleNotesParser:
                        Note: The content of these notes cannot be decrypted without the password.
         """
         return [note for note in self.notes if note.is_password_protected]
+
+    def get_note_by_applescript_id(self, applescript_id: str) -> Note | None:
+        """Get a note by its AppleScript ID.
+
+        Args:
+            applescript_id: The AppleScript ID to search for.
+                          Format: x-coredata://UUID/ICNote/pID
+
+        Returns:
+            Note | None: The note with the specified AppleScript ID, or None if not found.
+        """
+        for note in self.notes:
+            if note.applescript_id == applescript_id:
+                return note
+        return None
 
     def get_notes_with_attachments(self) -> list[Note]:
         """Get all notes that have attachments.
