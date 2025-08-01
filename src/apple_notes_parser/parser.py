@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 
 from .database import AppleNotesDatabase
@@ -327,14 +328,15 @@ class AppleNotesParser:
         Returns:
             list[str]: Sorted list of all unique hashtags found in the database.
         """
-        # Try to get tags from database first (more accurate for iOS 15+)
+        # Try to get tags from database first (more accurate for macOS 15+)
         try:
             with AppleNotesDatabase(str(self.database_path)) as db:
                 if db._embedded_extractor:
                     db_tags = db._embedded_extractor.get_all_hashtags()
                     if db_tags:
                         return db_tags
-        except:
+        except (DatabaseError, Exception) as e:
+            logging.debug(f"Failed to get hashtags from database: {e}. Falling back to note-based extraction.")
             pass  # Fall back to note-based extraction
 
         # Fallback: extract from loaded notes
@@ -364,14 +366,15 @@ class AppleNotesParser:
             dict[str, int]: Dictionary mapping tag names to the number of notes
                           containing each tag, sorted by tag name.
         """
-        # Try to get counts from database first (more accurate for iOS 15+)
+        # Try to get counts from database first (more accurate for macOS 15+)
         try:
             with AppleNotesDatabase(str(self.database_path)) as db:
                 if db._embedded_extractor:
                     db_counts = db._embedded_extractor.get_hashtag_counts()
                     if db_counts:
                         return db_counts
-        except:
+        except (DatabaseError, Exception) as e:
+            logging.debug(f"Failed to get hashtag counts from database: {e}. Falling back to note-based counting.")
             pass  # Fall back to note-based counting
 
         # Fallback: count from loaded notes

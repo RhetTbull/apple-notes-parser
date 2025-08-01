@@ -117,16 +117,16 @@ class EmbeddedObjectExtractor:
         """Get all unique hashtags across all notes.
 
         Retrieves all hashtags stored as embedded objects in the database.
-        Only available for iOS 15+ databases.
+        Only available for macOS 12+ databases.
 
         Returns:
             list[str]: Sorted list of all unique hashtags (without # symbol).
-                      Empty list for iOS versions below 15.
+                      Empty list for macOS versions below 12.
 
         Raises:
             DatabaseError: If database query fails.
         """
-        if self.ios_version < 15:
+        if self.macos_version < 12:
             return []
 
         try:
@@ -158,16 +158,16 @@ class EmbeddedObjectExtractor:
         """Get all unique mentions across all notes.
 
         Retrieves all mentions stored as embedded objects in the database.
-        Only available for iOS 15+ databases.
+        Only available for macOS 12+ databases.
 
         Returns:
             list[str]: Sorted list of all unique mentions (without @ symbol).
-                      Empty list for iOS versions below 15.
+                      Empty list for macOS versions below 12.
 
         Raises:
             DatabaseError: If database query fails.
         """
-        if self.ios_version < 15:
+        if self.macos_version < 12:
             return []
 
         try:
@@ -199,19 +199,19 @@ class EmbeddedObjectExtractor:
         """Get all note IDs that have a specific hashtag.
 
         Searches for notes containing the specified hashtag in embedded objects.
-        Only available for iOS 15+ databases.
+        Only available for macOS 12+ databases.
 
         Args:
             hashtag: Hashtag to search for (with or without # symbol).
 
         Returns:
             list[int]: List of note IDs containing the specified hashtag.
-                      Empty list for iOS versions below 15.
+                      Empty list for macOS versions below 12.
 
         Raises:
             DatabaseError: If database query fails.
         """
-        if self.ios_version < 15:
+        if self.macos_version < 12:
             return []
 
         try:
@@ -239,17 +239,17 @@ class EmbeddedObjectExtractor:
         """Get count of notes for each hashtag.
 
         Counts how many notes contain each hashtag based on embedded objects.
-        Only available for iOS 15+ databases.
+        Only available for macOS 12+ databases.
 
         Returns:
             dict[str, int]: Dictionary mapping hashtag names (without # symbol)
                            to the number of notes containing each hashtag.
-                           Empty dict for iOS versions below 15.
+                           Empty dict for macOS versions below 12.
 
         Raises:
             DatabaseError: If database query fails.
         """
-        if self.ios_version < 15:
+        if self.macos_version < 12:
             return {}
 
         try:

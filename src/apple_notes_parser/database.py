@@ -12,6 +12,11 @@ from .exceptions import DatabaseError
 from .models import Account, Attachment, Folder, Note
 from .protobuf_parser import ProtobufParser
 
+# Constants for timestamp conversions
+CORE_DATA_EPOCH_OFFSET = 978307200  # Seconds between Core Data (2001-01-01) and Unix (1970-01-01) epochs
+MAX_TIMESTAMP_32BIT = 2147483647    # Maximum 32-bit timestamp value
+MAX_TIMESTAMP_YEAR_2100 = 4102444800  # Timestamp for year 2100 (reasonable upper bound)
+
 
 class AppleNotesDatabase:
     """Handles SQLite database operations for Apple Notes."""
@@ -223,41 +228,6 @@ class AppleNotesDatabase:
 
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to detect macOS version: {e}")
-
-    def get_ios_version(self) -> int:
-        """Legacy method for backward compatibility.
-
-        Deprecated: Use get_macos_version() instead.
-        This method maps macOS versions to rough iOS equivalents for compatibility.
-
-        Returns:
-            int: Rough iOS version equivalent of detected macOS version.
-        """
-        macos_version = self.get_macos_version()
-
-        # Check for special case: newer macOS 15 builds with additional features
-        if macos_version == 15:
-            # Check if this is a newer macOS 15 build with ZNEEDSTOFETCHUSERSPECIFICRECORDASSETS
-            try:
-                cursor = self.connection.cursor()
-                cursor.execute("PRAGMA table_info(ZICCLOUDSYNCINGOBJECT)")
-                columns = [row[1] for row in cursor.fetchall()]
-                if "ZNEEDSTOFETCHUSERSPECIFICRECORDASSETS" in columns:
-                    return 19  # Newer macOS 15 build with additional features
-                else:
-                    return 18  # Standard macOS 15 build
-            except:
-                return 18  # Fallback to standard macOS 15
-        elif macos_version == 14:
-            return 17  # macOS 14 ~ iOS 17 (both released in 2023)
-        elif macos_version == 13:
-            return 16  # macOS 13 ~ iOS 16 (both released in 2022)
-        elif macos_version == 12:
-            return 15  # macOS 12 ~ iOS 15 (both released in 2021)
-        elif macos_version == 11:
-            return 14  # macOS 11 ~ iOS 14 (both released in 2020)
-        else:
-            return 13  # macOS 10.x ~ iOS 13 and earlier
 
     def get_accounts(self) -> list[Account]:
         """Get all accounts from the database.
@@ -702,13 +672,13 @@ class AppleNotesDatabase:
             # The difference is 978307200 seconds (31 years)
 
             # Skip invalid timestamps (0, negative, or extremely large values)
-            if core_time <= 0 or core_time > 2147483647:  # Max 32-bit timestamp
+            if core_time <= 0 or core_time > MAX_TIMESTAMP_32BIT:
                 return None
 
-            unix_timestamp = core_time + 978307200
+            unix_timestamp = core_time + CORE_DATA_EPOCH_OFFSET
 
             # Additional validation for reasonable date range (1970-2100)
-            if unix_timestamp < 0 or unix_timestamp > 4102444800:  # Year 2100
+            if unix_timestamp < 0 or unix_timestamp > MAX_TIMESTAMP_YEAR_2100:
                 return None
 
             return datetime.fromtimestamp(unix_timestamp)

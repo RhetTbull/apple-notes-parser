@@ -58,7 +58,7 @@ class ProtobufParser:
                 # Try to decode as plain text (legacy format)
                 try:
                     return zdata.decode("utf-8", errors="ignore")
-                except:
+                except (UnicodeDecodeError, ValueError):
                     return None
 
         except Exception as e:
@@ -87,7 +87,7 @@ class ProtobufParser:
             # Remove excessive whitespace
             text = re.sub(r"\s+", " ", text).strip()
             return text if text else None
-        except:
+        except (UnicodeDecodeError, ValueError, re.error):
             return None
 
     @staticmethod
@@ -270,7 +270,7 @@ class ProtobufParser:
                         "mentions": ProtobufParser.extract_mentions(text),
                         "links": ProtobufParser.extract_links(text),
                     }
-                except:
+                except (UnicodeDecodeError, ValueError):
                     return {}
 
         except Exception as e:

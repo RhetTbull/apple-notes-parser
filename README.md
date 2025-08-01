@@ -274,7 +274,7 @@ The library uses Protocol Buffers to parse compressed note data. It can handle:
 Automatically detects macOS version based on database schema:
 
 - macOS 15 (Sequoia): `ZNEEDSTOFETCHUSERSPECIFICRECORDASSETS` column
-- macOS 15 (Sequoia): `ZUNAPPLIEDENCRYPTEDRECORDDATA` column  
+- macOS 15 (Sequoia): `ZUNAPPLIEDENCRYPTEDRECORDDATA` column
 - macOS 14 (Sonoma): `ZGENERATION` column
 - macOS 13 (Ventura): `ZACCOUNT6` column
 - macOS 12 (Monterey): `ZACCOUNT5` column
@@ -522,10 +522,10 @@ The library is designed to be extensible for future macOS versions:
 
 3. **Update version detection in `src/apple_notes_parser/database.py`:**
    ```python
-   def get_ios_version(self) -> int:
+   def get_macos_version(self) -> int:
        # Add detection logic for new version
        if "NEW_COLUMN_NAME" in columns:
-           self._ios_version = 19  # New version number
+           self._macos_version = 26  # New version number
    ```
 
 4. **Run tests to ensure compatibility:**
