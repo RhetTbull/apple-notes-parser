@@ -328,7 +328,7 @@ def test_export_functionality(test_database):
 
     assert len(export_data["accounts"]) >= 1
     assert len(export_data["folders"]) == 6
-    assert len(export_data["notes"]) == 8
+    assert len(export_data["notes"]) == 9
 
     # Verify folder paths are included
     for folder_data in export_data["folders"]:

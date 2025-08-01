@@ -1,0 +1,130 @@
+note.id=x-coredata://FABDAB03-8EF2-41B9-9944-193D67BE0365/ICNote/p19
+note.name=This note is deleted
+note.folder=Recently Deleted
+note.account=On My Mac
+note.creation_date=2025-08-01 04:44:45
+note.modification_date=2025-08-01 04:44:48
+note.password_protected=False
+note.body=<div><h1>This note is deleted</h1></div>
+
+note.plaintext=This note is deleted
+
+note.id=x-coredata://FABDAB03-8EF2-41B9-9944-193D67BE0365/ICNote/p18
+note.name=This note is deeply buried
+note.folder=Subsubfolder
+note.account=On My Mac
+note.creation_date=2025-08-01 04:44:25
+note.modification_date=2025-08-01 04:44:40
+note.password_protected=False
+note.body=<div><h1>This note is deeply buried</h1></div>
+<div><br></div>
+<div>In folder Folder2/Subfolder/Subsubfolder</div>
+<div><br></div>
+
+note.plaintext=This note is deeply buried
+
+In folder Folder2/Subfolder/Subsubfolder
+
+
+note.id=x-coredata://FABDAB03-8EF2-41B9-9944-193D67BE0365/ICNote/p16
+note.name=This note is in a subfolder
+note.folder=Subfolder
+note.account=On My Mac
+note.creation_date=2025-08-01 04:43:58
+note.modification_date=2025-08-01 04:44:08
+note.password_protected=False
+note.body=<div><h1>This note is in a subfolder</h1></div>
+<div><br></div>
+<div>In Folder2/Subfolder</div>
+
+note.plaintext=This note is in a subfolder
+
+In Folder2/Subfolder
+
+note.id=x-coredata://FABDAB03-8EF2-41B9-9944-193D67BE0365/ICNote/p13
+note.name=This note is in a folder
+note.folder=Folder
+note.account=On My Mac
+note.creation_date=2025-08-01 04:43:32
+note.modification_date=2025-08-01 04:43:41
+note.password_protected=False
+note.body=<div><h1>This note is in a folder</h1></div>
+<div><br></div>
+<div>In Folder</div>
+
+note.plaintext=This note is in a folder
+
+In Folder
+
+note.id=x-coredata://FABDAB03-8EF2-41B9-9944-193D67BE0365/ICNote/p10
+note.name=This note has special formatting
+note.folder=Notes
+note.account=On My Mac
+note.creation_date=2025-08-01 04:42:38
+note.modification_date=2025-08-01 04:43:15
+note.password_protected=False
+note.body=<div><h1>This note has special formatting</h1></div>
+<div><br></div>
+<div>This is a checklist with 3 items</div>
+<ul>
+<li>Item 1</li>
+<li>Item 2</li>
+<li>Item 3</li>
+</ul>
+<div><br></div>
+<div><br></div>
+<div>This is a 2x2 table</div>
+<div><object><table cellspacing="0" cellpadding="0" style="border-collapse: collapse; direction: ltr">
+<tbody>
+<tr><td valign="top" style="border-style: solid; border-width: 1.0px 1.0px 1.0px 1.0px; border-color: #ccc; padding: 3.0px 5.0px 3.0px 5.0px; min-width: 70px"><div>Header 1</div>
+</td><td valign="top" style="border-style: solid; border-width: 1.0px 1.0px 1.0px 1.0px; border-color: #ccc; padding: 3.0px 5.0px 3.0px 5.0px; min-width: 70px"><div>Header 2</div>
+</td></tr>
+<tr><td valign="top" style="border-style: solid; border-width: 1.0px 1.0px 1.0px 1.0px; border-color: #ccc; padding: 3.0px 5.0px 3.0px 5.0px; min-width: 70px"><div>Item 1</div>
+</td><td valign="top" style="border-style: solid; border-width: 1.0px 1.0px 1.0px 1.0px; border-color: #ccc; padding: 3.0px 5.0px 3.0px 5.0px; min-width: 70px"><div>Item 2</div>
+</td></tr>
+</tbody>
+</table></object><br></div>
+<div><br></div>
+<div><b><u>This is bold and underlined.</u></b></div>
+
+note.plaintext=This note has special formatting
+
+This is a checklist with 3 items
+Item 1
+Item 2
+Item 3
+
+
+This is a 2x2 table
+￼
+
+This is bold and underlined.
+note.id=x-coredata://FABDAB03-8EF2-41B9-9944-193D67BE0365/ICNote/p9
+note.name=This note is password protected
+note.folder=Notes
+note.account=On My Mac
+note.creation_date=2025-08-01 04:41:48
+note.modification_date=2025-08-01 04:42:26
+note.password_protected=True
+note.body=<div><h1>This note is password protected</h1></div>
+<div><br></div>
+<div>This is a secret!</div>
+
+note.plaintext=This note is password protected
+
+This is a secret!
+note.id=x-coredata://FABDAB03-8EF2-41B9-9944-193D67BE0365/ICNote/p5
+note.name=This is a note
+note.folder=Notes
+note.account=On My Mac
+note.creation_date=2025-08-01 04:41:41
+note.modification_date=2025-08-01 04:41:46
+note.password_protected=False
+note.body=<div><h1>This is a note</h1></div>
+<div><br></div>
+<div>This is plain note</div>
+
+note.plaintext=This is a note
+
+This is plain note
+

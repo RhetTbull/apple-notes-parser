@@ -58,7 +58,7 @@ def test_macos26_basic_data_extraction(macos26_db_connection):
     # Test notes
     folders_dict = {f.id: f for f in folders}
     notes = macos26_db_connection.get_notes(accounts_dict, folders_dict)
-    assert len(notes) == 7
+    assert len(notes) == 8
 
 def test_macos26_folder_structure(macos26_db_connection):
     """Test folder hierarchy in macOS 26 database."""
@@ -142,7 +142,7 @@ def test_macos26_parser_integration(macos26_database):
     parser = AppleNotesParser(macos26_database)
 
     # Basic functionality
-    assert len(parser.notes) == 7
+    assert len(parser.notes) == 8
     assert len(parser.folders) == 6
     assert len(parser.accounts) == 1
 
@@ -175,7 +175,7 @@ def test_macos26_export_functionality(macos26_database):
 
     assert len(export_data["accounts"]) == 1
     assert len(export_data["folders"]) == 6
-    assert len(export_data["notes"]) == 7
+    assert len(export_data["notes"]) == 8
 
     # Verify account data
     account = export_data["accounts"][0]
