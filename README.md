@@ -273,14 +273,14 @@ The library uses Protocol Buffers to parse compressed note data. It can handle:
 
 Automatically detects macOS version based on database schema:
 
-- macOS 15 (Sequoia): `ZNEEDSTOFETCHUSERSPECIFICRECORDASSETS` column
 - macOS 15 (Sequoia): `ZUNAPPLIEDENCRYPTEDRECORDDATA` column
-- macOS 14 (Sonoma): `ZGENERATION` column
-- macOS 13 (Ventura): `ZACCOUNT6` column
-- macOS 12 (Monterey): `ZACCOUNT5` column
-- macOS 11 (Big Sur): `ZLASTOPENEDDATE` column
-- macOS 10.15 (Catalina): `ZACCOUNT4` column
-- macOS 10.14 (Mojave): `ZSERVERRECORDDATA` column
+- macOS 14 (Sonoma): `ZSUPPORTSV1NEO` column
+- macOS 13 (Ventura): `ZGENERATION` column
+- macOS 12 (Monterey): `ZACCOUNT6` column
+- macOS 11 (Big Sur): `ZACCOUNT5` column
+- macOS 10.15 (Catalina): `ZLASTOPENEDDATE` column
+- macOS 10.14 (Mojave): `ZACCOUNT4` column
+- macOS 10.13 (High Sierra): `ZSERVERRECORDDATA` column
 - macOS 10.12 (Sierra): `Z_11NOTES` table
 - Legacy: Different table structure
 

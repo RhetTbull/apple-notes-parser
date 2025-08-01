@@ -204,6 +204,8 @@ class AppleNotesDatabase:
                 self._macos_version = 26  # macOS 26 (Tahoe)
             elif "ZUNAPPLIEDENCRYPTEDRECORDDATA" in columns:
                 self._macos_version = 15  # macOS 15 (Sequoia)
+            elif "ZSUPPORTSV1NEO" in columns:
+                self._macos_version = 14  # macOS 14 (Sonoma)
             elif "ZGENERATION" in columns:
                 self._macos_version = 13  # macOS 13 (Ventura)
             elif "ZACCOUNT6" in columns:

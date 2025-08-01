@@ -144,12 +144,21 @@ def macos_13_database():
 
 
 @pytest.fixture
+def macos_14_database():
+    """Fixture providing path to the macOS 14 NoteStore database."""
+    database_path = Path(__file__).parent / "data" / "NoteStore-macOS-14-Sonoma.sqlite"
+    if not database_path.exists():
+        pytest.skip(f"macOS 14 database not found at {database_path}")
+    return str(database_path)
+
+
+@pytest.fixture
 def macos_15_database():
     """Fixture providing path to the macOS 15 NoteStore database."""
     return test_database()
 
 
-@pytest.fixture(params=["macos_12_monterey", "macos_13_ventura", "macos_15_sequoia", "macos_26_tahoe"])
+@pytest.fixture(params=["macos_12_monterey", "macos_13_ventura", "macos_14_sonoma", "macos_15_sequoia", "macos_26_tahoe"])
 def versioned_database(request):
     """Parameterized fixture for testing across different database versions."""
     if request.param == "macos_12_monterey":
@@ -165,6 +174,13 @@ def versioned_database(request):
         )
         if not database_path.exists():
             pytest.skip(f"macOS 13 (Ventura) database not found at {database_path}")
+        return str(database_path)
+    elif request.param == "macos_14_sonoma":
+        database_path = (
+            Path(__file__).parent / "data" / "NoteStore-macOS-14-Sonoma.sqlite"
+        )
+        if not database_path.exists():
+            pytest.skip(f"macOS 14 (Sonoma) database not found at {database_path}")
         return str(database_path)
     elif request.param == "macos_15_sequoia":
         database_path = (
@@ -239,6 +255,31 @@ def version_metadata(versioned_database):
             "attachment_notes": [],  # No attachments in this sample
             "formatted_notes": ["This note has special formatting"],
             "deleted_notes": [],  # No notes currently in deleted folder
+        }
+    elif "macOS-14" in db_path.name:
+        return {
+            "version": "macOS 14 (Sonoma)",
+            "macos_version": 14,  # Database version detection returns 14 for macOS 14
+            "z_uuid": "96FBBB9A-C1A9-4216-ACA4-1BE22EC8E9B4",
+            "total_notes": 8,
+            "total_folders": 6,
+            "account_name": "On My Mac",
+            "expected_folders": {
+                "Notes": {"parent": None, "path": "Notes"},
+                "Recently Deleted": {"parent": None, "path": "Recently Deleted"},
+                "Folder": {"parent": None, "path": "Folder"},  # Top-level folder
+                "Folder2": {"parent": None, "path": "Folder2"},  # Top-level folder
+                "Subfolder": {"parent": "Folder2", "path": "Folder2/Subfolder"},
+                "Subsubfolder": {
+                    "parent": "Subfolder",
+                    "path": "Folder2/Subfolder/Subsubfolder",
+                },
+            },
+            "tagged_notes": [],  # No tags in macOS 14 sample
+            "protected_notes": ["This note is password protected"],
+            "attachment_notes": ["This note has an attachment"],  # macOS 14 has attachment
+            "formatted_notes": ["This note has special formatting"],
+            "deleted_notes": ["This is a deleted note"],  # macOS 14 has deleted notes
         }
     elif "macOS-15" in db_path.name:
         return {

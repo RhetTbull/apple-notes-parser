@@ -1,0 +1,131 @@
+note.id=x-coredata://96FBBB9A-C1A9-4216-ACA4-1BE22EC8E9B4/ICNote/p18
+note.name=This note has an attachment
+note.folder=Notes
+note.account=On My Mac
+note.creation_date=2025-08-01 11:55:45
+note.modification_date=2025-08-01 11:56:39
+note.password_protected=False
+note.body=<div><h1><br></h1></div>
+<div><h1>This note has an attachment</h1></div>
+<div><br></div>
+<div>This attachment is named “bitcoin.pdf”</div>
+<div><br></div>
+<div><br><br></div>
+
+note.plaintext=
+This note has an attachment
+
+This attachment is named “bitcoin.pdf”
+
+￼
+
+note.id=x-coredata://96FBBB9A-C1A9-4216-ACA4-1BE22EC8E9B4/ICNote/p17
+note.name=This note is password protected
+note.folder=Notes
+note.account=On My Mac
+note.creation_date=2025-08-01 11:55:13
+note.modification_date=2025-08-01 11:55:21
+note.password_protected=True
+note.body=<div><h1>This note is password protected</h1></div>
+<div><br></div>
+<div>This is a secret!</div>
+
+note.plaintext=This note is password protected
+
+This is a secret!
+note.id=x-coredata://96FBBB9A-C1A9-4216-ACA4-1BE22EC8E9B4/ICNote/p14
+note.name=This note has special formatting
+note.folder=Notes
+note.account=On My Mac
+note.creation_date=2025-08-01 11:54:28
+note.modification_date=2025-08-01 11:55:10
+note.password_protected=False
+note.body=<div><h1>This note has special formatting</h1></div>
+<div><br></div>
+<div>This is a checklist with 3 items:</div>
+<ul>
+<li>Item 1</li>
+<li>Item 2</li>
+<li>Item 3</li>
+</ul>
+<div><br></div>
+<div>This is a 2x2 table</div>
+<div><object><table cellspacing="0" cellpadding="0" style="border-collapse: collapse; direction: ltr">
+<tbody>
+<tr><td valign="top" style="border-style: solid; border-width: 1.0px 1.0px 1.0px 1.0px; border-color: #ccc; padding: 3.0px 5.0px 3.0px 5.0px; min-width: 70px"><div>Header 1</div>
+</td><td valign="top" style="border-style: solid; border-width: 1.0px 1.0px 1.0px 1.0px; border-color: #ccc; padding: 3.0px 5.0px 3.0px 5.0px; min-width: 70px"><div>Header 2</div>
+</td></tr>
+<tr><td valign="top" style="border-style: solid; border-width: 1.0px 1.0px 1.0px 1.0px; border-color: #ccc; padding: 3.0px 5.0px 3.0px 5.0px; min-width: 70px"><div>Item 1</div>
+</td><td valign="top" style="border-style: solid; border-width: 1.0px 1.0px 1.0px 1.0px; border-color: #ccc; padding: 3.0px 5.0px 3.0px 5.0px; min-width: 70px"><div>Item 2</div>
+</td></tr>
+</tbody>
+</table></object><br></div>
+<div><br></div>
+<div><b><u>This text is bold and underlined.</u></b></div>
+
+note.plaintext=This note has special formatting
+
+This is a checklist with 3 items:
+Item 1
+Item 2
+Item 3
+
+This is a 2x2 table
+￼
+
+This text is bold and underlined.
+note.id=x-coredata://96FBBB9A-C1A9-4216-ACA4-1BE22EC8E9B4/ICNote/p13
+note.name=This is a plain note
+note.folder=Notes
+note.account=On My Mac
+note.creation_date=2025-08-01 11:54:17
+note.modification_date=2025-08-01 11:54:26
+note.password_protected=False
+note.body=<div><h1>This is a plain note</h1></div>
+<div><br></div>
+<div>This is a plain note</div>
+
+note.plaintext=This is a plain note
+
+This is a plain note
+
+note.id=x-coredata://96FBBB9A-C1A9-4216-ACA4-1BE22EC8E9B4/ICNote/p12
+note.name=This is a deleted note
+note.folder=Recently Deleted
+note.account=On My Mac
+note.creation_date=2025-08-01 11:54:08
+note.modification_date=2025-08-01 11:54:12
+note.password_protected=False
+note.body=<div><h1>This is a deleted note</h1></div>
+
+note.plaintext=This is a deleted note
+
+note.id=x-coredata://96FBBB9A-C1A9-4216-ACA4-1BE22EC8E9B4/ICNote/p11
+note.name=This note is in a folder
+note.folder=Folder
+note.account=On My Mac
+note.creation_date=2025-08-01 11:53:51
+note.modification_date=2025-08-01 11:54:01
+note.password_protected=False
+note.body=<div><h1>This note is in a folder</h1></div>
+<div><br></div>
+<div>This note is in folder Folder</div>
+
+note.plaintext=This note is in a folder
+
+This note is in folder Folder
+note.id=x-coredata://96FBBB9A-C1A9-4216-ACA4-1BE22EC8E9B4/ICNote/p10
+note.name=This note is deeply buried
+note.folder=Subsubfolder
+note.account=On My Mac
+note.creation_date=2025-08-01 11:53:31
+note.modification_date=2025-08-01 11:53:47
+note.password_protected=False
+note.body=<div><h1>This note is deeply buried</h1></div>
+<div><br></div>
+<div>This note is in Folder2/Subfolder/Subsubfolder</div>
+
+note.plaintext=This note is deeply buried
+
+This note is in Folder2/Subfolder/Subsubfolder
+
