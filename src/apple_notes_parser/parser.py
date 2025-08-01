@@ -336,7 +336,9 @@ class AppleNotesParser:
                     if db_tags:
                         return db_tags
         except (DatabaseError, Exception) as e:
-            logging.debug(f"Failed to get hashtags from database: {e}. Falling back to note-based extraction.")
+            logging.debug(
+                f"Failed to get hashtags from database: {e}. Falling back to note-based extraction."
+            )
             pass  # Fall back to note-based extraction
 
         # Fallback: extract from loaded notes
@@ -374,7 +376,9 @@ class AppleNotesParser:
                     if db_counts:
                         return db_counts
         except (DatabaseError, Exception) as e:
-            logging.debug(f"Failed to get hashtag counts from database: {e}. Falling back to note-based counting.")
+            logging.debug(
+                f"Failed to get hashtag counts from database: {e}. Falling back to note-based counting."
+            )
             pass  # Fall back to note-based counting
 
         # Fallback: count from loaded notes

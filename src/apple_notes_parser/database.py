@@ -13,8 +13,10 @@ from .models import Account, Attachment, Folder, Note
 from .protobuf_parser import ProtobufParser
 
 # Constants for timestamp conversions
-CORE_DATA_EPOCH_OFFSET = 978307200  # Seconds between Core Data (2001-01-01) and Unix (1970-01-01) epochs
-MAX_TIMESTAMP_32BIT = 2147483647    # Maximum 32-bit timestamp value
+CORE_DATA_EPOCH_OFFSET = (
+    978307200  # Seconds between Core Data (2001-01-01) and Unix (1970-01-01) epochs
+)
+MAX_TIMESTAMP_32BIT = 2147483647  # Maximum 32-bit timestamp value
 MAX_TIMESTAMP_YEAR_2100 = 4102444800  # Timestamp for year 2100 (reasonable upper bound)
 
 
@@ -222,7 +224,9 @@ class AppleNotesDatabase:
                 if cursor.fetchone():
                     self._macos_version = 10  # macOS 10.12 (Sierra)
                 else:
-                    self._macos_version = 10  # Default fallback (macOS 10.11 and earlier)
+                    self._macos_version = (
+                        10  # Default fallback (macOS 10.11 and earlier)
+                    )
 
             return self._macos_version
 

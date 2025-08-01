@@ -387,35 +387,50 @@ uv run mypy src/apple_notes_parser/parser.py
 
 #### Pre-commit Workflow
 
-Before submitting code, run the complete quality check:
+Before submitting code, run the complete quality check using our automated scripts:
 
 ```bash
-# Run all quality checks
-uv run ruff check src/
-uv run ruff format src/
-uv run mypy src/apple_notes_parser/
-uv run pytest
+# Option 1: Quick entry point from project root
+./check
 
-# Or create a simple script to run all checks
-cat > check.sh << 'EOF'
-#!/bin/bash
-echo "🔍 Running Ruff linting..."
-uv run ruff check src/
+# Option 2: Use the comprehensive Python script directly
+python scripts/check_code_quality.py
 
-echo "🎨 Running Ruff formatting..."
-uv run ruff format src/
+# Option 3: Use the simple shell script
+./scripts/check.sh
 
-echo "🔬 Running MyPy type checking..."
-uv run mypy src/apple_notes_parser/
+# Include tests in the quality check
+python scripts/check_code_quality.py --with-tests
+./scripts/check.sh --with-tests
 
-echo "🧪 Running tests..."
-uv run pytest
+# Only run checks without auto-fixing
+python scripts/check_code_quality.py --check-only
 
-echo "✅ All checks completed!"
-EOF
+# Only run auto-fixing tools
+python scripts/check_code_quality.py --fix-only
 
-chmod +x check.sh
-./check.sh
+# Show detailed output from all tools
+python scripts/check_code_quality.py --verbose
+```
+
+**Script Features:**
+- **`./check`**: Quick entry point from project root (same as running the Python script)
+- **`scripts/check_code_quality.py`**: Comprehensive Python script with options for different workflows
+- **`scripts/check.sh`**: Simple shell script for quick checks
+- All scripts automatically detect and use `uv` if available
+- Proper error handling and reporting
+- Optional test execution
+- Flexible modes (check-only, fix-only, etc.)
+
+**Manual workflow** (if you prefer to run commands individually):
+
+```bash
+# Run all quality checks manually
+uv run ruff check src/ --fix      # Auto-fix linting issues
+uv run ruff format src/           # Format code
+uv run ruff check src/            # Verify no remaining issues
+uv run mypy src/apple_notes_parser/  # Type checking  
+uv run pytest                    # Run tests
 ```
 
 #### Configuration
@@ -495,7 +510,10 @@ apple-notes-parser/
 │   ├── test_version_agnostic.py # Cross-version compatibility tests
 │   └── test_*.py                # Additional test modules
 ├── scripts/                     # Development and build scripts
+│   ├── check_code_quality.py    # Comprehensive code quality checker
+│   ├── check.sh                 # Simple shell script for quality checks
 │   └── regenerate_protobuf.py   # Automated protobuf regeneration
+├── check                        # Quick entry point for code quality checks
 ├── pyproject.toml               # Project configuration and dependencies
 ├── README.md                    # This file
 └── pytest.ini                  # Test configuration
@@ -589,10 +607,14 @@ Contributions are welcome! Please feel free to submit pull requests or open issu
 2. **Write tests** for any new functionality
 3. **Run quality checks** before submitting:
    ```bash
-   uv run ruff check src/          # Linting
-   uv run ruff format src/         # Formatting
+   # Use the quick entry point (recommended)
+   ./check --with-tests
+   
+   # Or run checks manually
+   uv run ruff check src/ --fix     # Linting with auto-fixes
+   uv run ruff format src/          # Formatting
    uv run mypy src/apple_notes_parser/  # Type checking
-   uv run pytest                   # Tests
+   uv run pytest                    # Tests
    ```
 4. **Follow existing code style** and patterns
 5. **Update documentation** for user-facing changes

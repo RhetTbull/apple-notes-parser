@@ -7,13 +7,13 @@ name = "apple-notes-parser"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "grpcio-tools" },
     { name = "protobuf" },
 ]
 
 [package.optional-dependencies]
 dev = [
     { name = "clirunner" },
+    { name = "grpcio-tools" },
     { name = "mypy" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -30,7 +30,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "clirunner", marker = "extra == 'dev'", specifier = ">=0.2.0" },
-    { name = "grpcio-tools", specifier = ">=1.74.0" },
+    { name = "grpcio-tools", marker = "extra == 'dev'", specifier = ">=1.74.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.13.0" },
     { name = "protobuf", specifier = ">=6.31.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0.0" },
