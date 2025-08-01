@@ -51,7 +51,7 @@ def main():
             return 1
             
     except FileNotFoundError:
-        print("❌ grpcio-tools not found. Install with: uv add grpcio-tools")
+        print("❌ grpcio-tools not found. Install dev dependencies with: uv sync --dev")
         return 1
     
     # Verify the generated file

@@ -5,7 +5,6 @@ description = "A Python library for reading and parsing Apple Notes SQLite datab
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "grpcio-tools>=1.74.0",
     "protobuf>=6.31.1",
 ]
 
@@ -16,6 +15,7 @@ dev = [
     "clirunner>=0.2.0",
     "ruff>=0.8.0",
     "mypy>=1.13.0",
+    "grpcio-tools>=1.74.0",
 ]
 
 [project.scripts]

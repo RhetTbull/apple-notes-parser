@@ -310,7 +310,7 @@ For using the library (end users), you only need:
 For development and building, you need:
 - Python 3.11+
 - `uv` package manager (recommended) or `pip`
-- `grpcio-tools` (for protobuf code generation, if needed)
+- Development dependencies including `grpcio-tools` (for protobuf code generation, if needed)
 
 ### Development Setup
 
@@ -444,9 +444,9 @@ UserWarning: Protobuf gencode version X.X.X is exactly one major version older t
 
 #### How to Regenerate Protobuf Files
 
-1. **Ensure you have the required tools:**
+1. **Ensure you have the required development tools:**
    ```bash
-   uv add grpcio-tools  # Should already be installed as a dependency
+   uv sync --dev  # Install development dependencies including grpcio-tools
    ```
 
 2. **Navigate to the protobuf source directory:**
@@ -555,20 +555,20 @@ The project uses these key dependencies:
 
 - **Runtime dependencies** (required for end users):
   - `protobuf>=6.31.1` - Protocol buffer runtime for parsing compressed note data
-  - `grpcio-tools>=1.74.0` - Includes protobuf compiler for code generation
 
 - **Development dependencies** (for contributors):
   - `pytest>=8.0.0` - Testing framework
   - `pytest-cov>=4.0.0` - Coverage reporting
   - `ruff>=0.8.0` - Fast Python linter and formatter
   - `mypy>=1.13.0` - Static type checker
+  - `grpcio-tools>=1.74.0` - Protocol buffer compiler for code generation
   - `types-protobuf>=6.30.2.20250703` - Type stubs for protobuf
 
 ### Troubleshooting
 
 **Protobuf version warnings:**
 - Regenerate protobuf files using the steps above
-- Ensure `protobuf` and `grpcio-tools` are at compatible versions
+- Ensure `protobuf` and `grpcio-tools` are at compatible versions (install dev dependencies with `uv sync --dev`)
 
 **Test failures:**
 - Ensure you have the real test database in `tests/data/`
@@ -609,7 +609,3 @@ This library builds upon the excellent work from:
 - [threeplanetssoftware/apple_cloud_notes_parser](https://github.com/threeplanetssoftware/apple_cloud_notes_parser) - Ruby implementation and protobuf definitions
 - [HamburgChimps/apple-notes-liberator](https://github.com/HamburgChimps/apple-notes-liberator) - Java implementation
 - [Ciofeca Forensics](https://ciofecaforensics.com/) - Technical research on Apple Notes storage format
-
-## Disclaimer
-
-This library is for educational and personal use only. Always respect privacy and obtain proper authorization before accessing someone else's data.
