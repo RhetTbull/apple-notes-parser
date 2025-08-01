@@ -82,11 +82,11 @@ def test_macos14_folder_structure(macos14_db_connection):
     # Test nested folders
     subfolder = folders_by_name["Subfolder"]
     assert not subfolder.is_root()
-    assert subfolder.get_parent(folders_dict).name == "Folder2"
+    assert subfolder.get_parent().name == "Folder2"
 
     subsubfolder = folders_by_name["Subsubfolder"]
     assert not subsubfolder.is_root()
-    assert subsubfolder.get_parent(folders_dict).name == "Subfolder"
+    assert subsubfolder.get_parent().name == "Subfolder"
 
 
 def test_macos14_notes_content(macos14_db_connection):
@@ -291,14 +291,14 @@ def test_macos14_folder_path_reconstruction(macos_14_database):
     deep_notes = [note for note in parser.notes if note.title == "This note is deeply buried"]
     assert len(deep_notes) == 1
     deep_note = deep_notes[0]
-    folder_path = deep_note.get_folder_path(folders_dict)
+    folder_path = deep_note.get_folder_path()
     assert folder_path == "Folder2/Subfolder/Subsubfolder"
 
     # Test single level folder
     folder_notes = [note for note in parser.notes if note.title == "This note is in a folder"]
     assert len(folder_notes) == 1
     folder_note = folder_notes[0]
-    folder_path = folder_note.get_folder_path(folders_dict)
+    folder_path = folder_note.get_folder_path()
     assert folder_path == "Folder"
 
 
@@ -318,7 +318,7 @@ def test_macos14_parser_integration(macos_14_database):
     # Folder functionality - verify all folders have valid paths
     folders_dict = parser.folders_dict
     for folder in parser.folders:
-        path = folder.get_path(folders_dict)
+        path = folder.get_path()
         assert isinstance(path, str)
         assert len(path) > 0
 

@@ -111,7 +111,7 @@ def test_export_structure(test_database):
 
         # Test folder path functionality
         folders_dict = {f.id: f for f in folders_list}
-        paths = [f.get_path(folders_dict) for f in folders_list]
+        paths = [f.get_path() for f in folders_list]
         assert len(paths) == 6
         assert any(
             "/" in path for path in paths
@@ -131,14 +131,14 @@ def test_folder_model_methods():
     assert root_folder.is_root()
     assert not child_folder.is_root()
 
-    # Test get_parent method
-    folders_dict = {1: root_folder, 2: child_folder}
-    assert child_folder.get_parent(folders_dict) == root_folder
-    assert root_folder.get_parent(folders_dict) is None
+    # Test get_parent method - set up parent relationship first
+    child_folder.parent = root_folder
+    assert child_folder.get_parent() == root_folder
+    assert root_folder.get_parent() is None
 
     # Test get_path method
-    assert root_folder.get_path(folders_dict) == "Root"
-    assert child_folder.get_path(folders_dict) == "Root/Child"
+    assert root_folder.get_path() == "Root"
+    assert child_folder.get_path() == "Root/Child"
 
 
 def test_database_error_propagation():

@@ -86,7 +86,7 @@ class TestFolderOnly:
             }
 
             for name, expected_path in expected_paths.items():
-                actual_path = folders_by_name[name].get_path(folders_dict)
+                actual_path = folders_by_name[name].get_path()
                 assert actual_path == expected_path, (
                     f"Expected {expected_path}, got {actual_path}"
                 )
@@ -103,14 +103,14 @@ class TestFolderOnly:
 
             # Test parent navigation with real folder hierarchy
             subsubfolder = folders_by_name["Subsubfolder"]
-            subfolder = subsubfolder.get_parent(folders_dict)
+            subfolder = subsubfolder.get_parent()
             assert subfolder.name == "Subfolder"
 
-            folder2 = subfolder.get_parent(folders_dict)
+            folder2 = subfolder.get_parent()
             assert folder2.name == "Folder2"
 
             # Folder2 is a root folder, should have no parent
-            assert folder2.get_parent(folders_dict) is None
+            assert folder2.get_parent() is None
 
     def test_macos_version_detection(self, test_database):
         """Test macOS version detection based on database schema."""
@@ -134,9 +134,14 @@ class TestFolderOnly:
 
             folders_by_name = {f.name: f for f in folders_list}
 
-            # Without folders_dict, should just return the folder name
-            assert folders_by_name["Subsubfolder"].get_path(None) == "Subsubfolder"
-            assert folders_by_name["Folder2"].get_path(None) == "Folder2"
+            # Without parent relationships, should just return the folder name
+            # Create isolated folders to test fallback behavior
+            isolated_folder = folders_by_name["Subsubfolder"]
+            isolated_folder.parent = None  # Remove parent to test fallback
+            assert isolated_folder.get_path() == "Subsubfolder"
+            
+            isolated_folder2 = folders_by_name["Folder2"]
+            assert isolated_folder2.get_path() == "Folder2"
 
     def test_root_folder_detection(self, test_database):
         """Test detection of root folders."""
@@ -165,14 +170,14 @@ class TestFolderOnly:
         assert root_folder.is_root()
         assert not child_folder.is_root()
 
-        # Test get_parent method
-        folders_dict = {1: root_folder, 2: child_folder}
-        assert child_folder.get_parent(folders_dict) == root_folder
-        assert root_folder.get_parent(folders_dict) is None
+        # Test get_parent method - set up parent relationship first
+        child_folder.parent = root_folder
+        assert child_folder.get_parent() == root_folder
+        assert root_folder.get_parent() is None
 
         # Test get_path method
-        assert root_folder.get_path(folders_dict) == "Root"
-        assert child_folder.get_path(folders_dict) == "Root/Child"
+        assert root_folder.get_path() == "Root"
+        assert child_folder.get_path() == "Root/Child"
 
     def test_cycle_prevention(self, test_database):
         """Test that cycle detection prevents infinite loops."""
@@ -187,7 +192,7 @@ class TestFolderOnly:
             notes_folder.parent_id = notes_folder.id  # Create cycle
 
             # Should not cause infinite loop, just return the folder name
-            path = notes_folder.get_path(folders_dict)
+            path = notes_folder.get_path()
             assert path == "Notes"
 
 

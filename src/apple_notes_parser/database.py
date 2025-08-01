@@ -334,6 +334,12 @@ class AppleNotesDatabase:
                     )
                     folders.append(folder)
 
+            # Set up parent relationships after all folders are created
+            folders_dict = {folder.id: folder for folder in folders}
+            for folder in folders:
+                if folder.parent_id and folder.parent_id in folders_dict:
+                    folder.parent = folders_dict[folder.parent_id]
+
             return folders
 
         except sqlite3.Error as e:

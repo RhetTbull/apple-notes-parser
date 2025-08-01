@@ -52,19 +52,19 @@ class TestFolderHierarchy:
             folders_by_name = {f.name: f for f in folders_list}
 
             # Test specific paths based on real database structure
-            assert folders_by_name["Notes"].get_path(folders_dict) == "Notes"
+            assert folders_by_name["Notes"].get_path() == "Notes"
             assert (
-                folders_by_name["Folder"].get_path(folders_dict) == "Folder"
+                folders_by_name["Folder"].get_path() == "Folder"
             )  # Top-level folder
             assert (
-                folders_by_name["Folder2"].get_path(folders_dict) == "Folder2"
+                folders_by_name["Folder2"].get_path() == "Folder2"
             )  # Top-level folder
             assert (
-                folders_by_name["Subfolder"].get_path(folders_dict)
+                folders_by_name["Subfolder"].get_path()
                 == "Folder2/Subfolder"
             )
             assert (
-                folders_by_name["Subsubfolder"].get_path(folders_dict)
+                folders_by_name["Subsubfolder"].get_path()
                 == "Folder2/Subfolder/Subsubfolder"
             )
 
@@ -80,14 +80,14 @@ class TestFolderHierarchy:
 
             # Test parent navigation with real folder hierarchy
             subsubfolder = folders_by_name["Subsubfolder"]
-            subfolder = subsubfolder.get_parent(folders_dict)
+            subfolder = subsubfolder.get_parent()
             assert subfolder.name == "Subfolder"
 
-            folder2 = subfolder.get_parent(folders_dict)
+            folder2 = subfolder.get_parent()
             assert folder2.name == "Folder2"
 
             # Folder2 is a root folder, should have no parent
-            assert folder2.get_parent(folders_dict) is None
+            assert folder2.get_parent() is None
 
     def test_folder_path_without_dict(self, test_database):
         """Test folder path fallback when no folders_dict is provided."""
@@ -99,8 +99,14 @@ class TestFolderHierarchy:
             folders_by_name = {f.name: f for f in folders_list}
 
             # Without folders_dict, should just return the folder name
-            assert folders_by_name["Subsubfolder"].get_path(None) == "Subsubfolder"
-            assert folders_by_name["Folder2"].get_path(None) == "Folder2"
+            # Without parent relationships, should just return the folder name
+            # Create isolated folders to test fallback behavior
+            isolated_folder = folders_by_name["Subsubfolder"]
+            isolated_folder.parent = None  # Remove parent to test fallback
+            assert isolated_folder.get_path() == "Subsubfolder"
+            
+            isolated_folder2 = folders_by_name["Folder2"]
+            assert isolated_folder2.get_path() == "Folder2"
 
     def test_parser_folder_integration(self, test_database):
         """Test folder hierarchy integration with direct database access."""
@@ -124,7 +130,7 @@ class TestFolderHierarchy:
             }
 
             for name, expected_path in paths.items():
-                actual_path = folders_by_name[name].get_path(folders_dict)
+                actual_path = folders_by_name[name].get_path()
                 assert actual_path == expected_path, (
                     f"Expected {expected_path}, got {actual_path}"
                 )
@@ -152,7 +158,7 @@ class TestFolderHierarchy:
             }
 
             for name, expected_path in expected_paths.items():
-                actual_path = folders_by_name[name].get_path(folders_dict)
+                actual_path = folders_by_name[name].get_path()
                 assert actual_path == expected_path
                 # Also check parent_id is correctly set
                 if name in ["Notes", "Recently Deleted", "Folder", "Folder2"]:
@@ -189,5 +195,5 @@ class TestFolderHierarchy:
             notes_folder.parent_id = notes_folder.id  # Create cycle
 
             # Should not cause infinite loop, just return the folder name
-            path = notes_folder.get_path(folders_dict)
+            path = notes_folder.get_path()
             assert path == "Notes"

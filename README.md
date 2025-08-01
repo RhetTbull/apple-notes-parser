@@ -119,7 +119,7 @@ Main parser class for Apple Notes databases.
 
 ### Data Models
 
-#### `Note`
+#### Note
 - `id: int` - Database primary key
 - `note_id: int` - Note identifier
 - `title: str` - Note title
@@ -136,15 +136,20 @@ Main parser class for Apple Notes databases.
 - `mentions: list[str]` - @mentions found in note
 - `links: list[str]` - URLs found in note
 - `attachments: list[Attachment]` - File attachments in note
+- `get_folder_path(): str` - Returns the path of the folder the note is in
+- `get_attachments_by_extension(extension: str) -> list[Attachment]` - Returns a list of attachments with the specified extension
+- `get_attachments_by_type(attachment_type: str) -> list[Attachment]` - Returns a list of attachments with the specified type
 
-#### `Folder`
-- `id: int` - Database primary key
+#### Folder
 - `name: str` - Folder name
 - `account: Account` - Owning account
 - `uuid: str` - Unique identifier
 - `parent_id: int` - Parent folder ID (for nested folders)
+- `get_path(): str` - Returns the path of the folder
+- `get_parent(): Folder` - Returns the parent folder
+- `is_root(): bool` - Returns whether the folder is the root folder
 
-#### `Attachment`
+#### Attachment
 - `id: int` - Database primary key
 - `filename: str` - Attachment filename (e.g., "document.pdf")
 - `file_size: int` - File size in bytes
@@ -164,7 +169,7 @@ Main parser class for Apple Notes databases.
 - `is_audio: bool` - Whether attachment is audio
 - `is_document: bool` - Whether attachment is a document
 
-#### `Account`
+#### Account
 - `id: int` - Database primary key
 - `name: str` - Account name (e.g., "iCloud", "On My Mac")
 - `identifier: str` - Account identifier
@@ -429,7 +434,7 @@ python scripts/check_code_quality.py --verbose
 uv run ruff check src/ --fix      # Auto-fix linting issues
 uv run ruff format src/           # Format code
 uv run ruff check src/            # Verify no remaining issues
-uv run mypy src/apple_notes_parser/  # Type checking  
+uv run mypy src/apple_notes_parser/  # Type checking
 uv run pytest                    # Run tests
 ```
 
@@ -609,7 +614,7 @@ Contributions are welcome! Please feel free to submit pull requests or open issu
    ```bash
    # Use the quick entry point (recommended)
    ./check --with-tests
-   
+
    # Or run checks manually
    uv run ruff check src/ --fix     # Linting with auto-fixes
    uv run ruff format src/          # Formatting

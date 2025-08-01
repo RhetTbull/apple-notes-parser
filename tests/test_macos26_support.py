@@ -90,11 +90,11 @@ def test_macos26_folder_structure(macos26_db_connection):
     # Test nested folders
     subfolder = folders_by_name["Subfolder"]
     assert not subfolder.is_root()
-    assert subfolder.get_parent(folders_dict).name == "Folder2"
+    assert subfolder.get_parent().name == "Folder2"
 
     subsubfolder = folders_by_name["Subsubfolder"]
     assert not subsubfolder.is_root()
-    assert subsubfolder.get_parent(folders_dict).name == "Subfolder"
+    assert subsubfolder.get_parent().name == "Subfolder"
 
 def test_macos26_notes_content(macos26_db_connection):
     """Test note content extraction from macOS 26 database."""
@@ -158,7 +158,7 @@ def test_macos26_parser_integration(macos26_database):
     # Folder functionality
     folders_dict = parser.folders_dict
     for folder in parser.folders:
-        path = folder.get_path(folders_dict)
+        path = folder.get_path()
         assert isinstance(path, str)
         assert len(path) > 0
 

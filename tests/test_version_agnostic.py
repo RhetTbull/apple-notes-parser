@@ -71,7 +71,7 @@ def test_folder_hierarchy_structure(versioned_database, version_metadata):
             assert folder is not None, f"Folder '{folder_name}' not found"
 
             # Check path construction
-            actual_path = folder.get_path(folders_dict)
+            actual_path = folder.get_path()
             expected_path = folder_info["path"]
             assert actual_path == expected_path, (
                 f"Expected path '{expected_path}', got '{actual_path}'"
@@ -83,7 +83,8 @@ def test_folder_hierarchy_structure(versioned_database, version_metadata):
                 assert folder.parent_id is None
             else:
                 assert not folder.is_root()
-                parent_folder = folder.get_parent(folders_dict)
+                parent_folder = folder.get_parent()
+                assert parent_folder is not None
                 assert parent_folder.name == folder_info["parent"]
 
 def test_applescript_id_construction(versioned_database, version_metadata):

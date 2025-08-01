@@ -33,20 +33,14 @@ class Folder:
     account: Account
     uuid: str | None = None
     parent_id: int | None = None
+    parent: Folder | None = field(default=None, init=False)  # Will be set after loading
 
-    def get_path(self, folders_dict: dict[int, Folder] | None = None) -> str:
+    def get_path(self) -> str:
         """Get the full path of this folder (e.g., 'Notes/Cocktails/Classic').
-
-        Args:
-            folders_dict: Dictionary mapping folder IDs to Folder objects for hierarchy traversal.
-                         If None, returns just the folder name.
 
         Returns:
             str: Full folder path from root to this folder, separated by '/'.
         """
-        if not folders_dict:
-            return self.name
-
         path_parts = []
         current_folder = self
         visited = set()  # Prevent infinite loops
@@ -55,8 +49,8 @@ class Folder:
             visited.add(current_folder.id)
             path_parts.append(current_folder.name)
 
-            if current_folder.parent_id and current_folder.parent_id in folders_dict:
-                current_folder = folders_dict[current_folder.parent_id]
+            if current_folder.parent:
+                current_folder = current_folder.parent
             else:
                 break
 
@@ -64,18 +58,13 @@ class Folder:
         path_parts.reverse()
         return "/".join(path_parts)
 
-    def get_parent(self, folders_dict: dict[int, Folder]) -> Folder | None:
+    def get_parent(self) -> Folder | None:
         """Get the parent folder object.
-
-        Args:
-            folders_dict: Dictionary mapping folder IDs to Folder objects.
 
         Returns:
             Folder | None: Parent folder object if exists, None otherwise.
         """
-        if self.parent_id and self.parent_id in folders_dict:
-            return folders_dict[self.parent_id]
-        return None
+        return self.parent
 
     def is_root(self) -> bool:
         """Check if this is a root folder (no parent).
@@ -331,20 +320,14 @@ class Note:
         ext = extension.lower().lstrip(".")
         return [att for att in self.attachments if att.file_extension == ext]
 
-    def get_folder_path(self, folders_dict: dict[int, Folder] | None = None) -> str:
+    def get_folder_path(self) -> str:
         """Get the full folder path for this note.
-
-        Args:
-            folders_dict: Dictionary mapping folder IDs to Folder objects for hierarchy traversal.
-                         If None, returns just the folder name.
 
         Returns:
             str: Full folder path from root to containing folder, separated by '/'.
                 Example: 'Notes/Cocktails/Classic'
         """
-        if folders_dict:
-            return self.folder.get_path(folders_dict)
-        return self.folder.name
+        return self.folder.get_path()
 
     def __str__(self) -> str:
         """Return string representation of Note.

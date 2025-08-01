@@ -237,14 +237,14 @@ def test_folder_path_reconstruction(database_with_connection):
     # Test deep hierarchy
     deep_note = notes_by_title.get("This note is deeply buried")
     if deep_note:
-        folder_path = deep_note.get_folder_path(folders_dict)
+        folder_path = deep_note.get_folder_path()
         expected_path = "Folder2/Subfolder/Subsubfolder"
         assert folder_path == expected_path
 
     # Test single level
     folder_note = notes_by_title.get("This note is in Folder")
     if folder_note:
-        folder_path = folder_note.get_folder_path(folders_dict)
+        folder_path = folder_note.get_folder_path()
         expected_path = "Folder"  # Folder is a root folder
         assert folder_path == expected_path
 

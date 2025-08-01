@@ -208,7 +208,6 @@ def cmd_export(args: argparse.Namespace) -> None:
         # Create a filtered export
         if len(notes_to_export) != len(parser.notes):
             # Create custom export with filtered notes
-            folders_dict = parser.folders_dict
             export_data = {
                 "accounts": [
                     {
@@ -226,7 +225,7 @@ def cmd_export(args: argparse.Namespace) -> None:
                         "account_name": folder.account.name,
                         "uuid": folder.uuid,
                         "parent_id": folder.parent_id,
-                        "path": folder.get_path(folders_dict),
+                        "path": folder.get_path(),
                     }
                     for folder in parser.folders
                 ],
@@ -244,7 +243,7 @@ def cmd_export(args: argparse.Namespace) -> None:
                         else None,
                         "account_name": note.account.name,
                         "folder_name": note.folder.name,
-                        "folder_path": note.get_folder_path(folders_dict),
+                        "folder_path": note.get_folder_path(),
                         "is_pinned": note.is_pinned,
                         "is_password_protected": note.is_password_protected,
                         "uuid": note.uuid,
