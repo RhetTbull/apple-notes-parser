@@ -17,9 +17,7 @@ from apple_notes_parser.database import AppleNotesDatabase
 @pytest.fixture
 def macos26_database():
     """Fixture providing path to the macOS 26 database."""
-    database_path = (
-        Path(__file__).parent / "data" / "NoteStore-macOS-26-Tahoe.sqlite"
-    )
+    database_path = Path(__file__).parent / "data" / "NoteStore-macOS-26-Tahoe.sqlite"
     if not database_path.exists():
         pytest.skip(f"macOS 26 database not found at {database_path}")
     return str(database_path)
@@ -30,6 +28,7 @@ def macos26_db_connection(macos26_database):
     """Fixture providing a connected AppleNotesDatabase instance for macOS 26."""
     with AppleNotesDatabase(macos26_database) as db:
         yield db
+
 
 def test_macos26_version_detection(macos26_db_connection):
     """Test that macOS 26 database is correctly identified."""
@@ -60,12 +59,12 @@ def test_macos26_basic_data_extraction(macos26_db_connection):
     notes = macos26_db_connection.get_notes(accounts_dict, folders_dict)
     assert len(notes) == 8
 
+
 def test_macos26_folder_structure(macos26_db_connection):
     """Test folder hierarchy in macOS 26 database."""
     accounts = macos26_db_connection.get_accounts()
     accounts_dict = {acc.id: acc for acc in accounts}
     folders = macos26_db_connection.get_folders(accounts_dict)
-    folders_dict = {f.id: f for f in folders}
 
     # Verify expected folders exist
     folder_names = {f.name for f in folders}
@@ -96,6 +95,7 @@ def test_macos26_folder_structure(macos26_db_connection):
     assert not subsubfolder.is_root()
     assert subsubfolder.get_parent().name == "Subfolder"
 
+
 def test_macos26_notes_content(macos26_db_connection):
     """Test note content extraction from macOS 26 database."""
     accounts = macos26_db_connection.get_accounts()
@@ -123,6 +123,7 @@ def test_macos26_notes_content(macos26_db_connection):
     assert formatted_note is not None
     assert not formatted_note.is_password_protected
 
+
 def test_macos26_applescript_ids(macos26_db_connection):
     """Test AppleScript ID construction for macOS 26 database."""
     accounts = macos26_db_connection.get_accounts()
@@ -136,6 +137,7 @@ def test_macos26_applescript_ids(macos26_db_connection):
         assert note.applescript_id is not None
         assert note.applescript_id.startswith("x-coredata://")
         assert "/ICNote/p" in note.applescript_id
+
 
 def test_macos26_parser_integration(macos26_database):
     """Test AppleNotesParser integration with macOS 26 database."""
@@ -156,11 +158,11 @@ def test_macos26_parser_integration(macos26_database):
     assert "vacation" in all_tags
 
     # Folder functionality
-    folders_dict = parser.folders_dict
     for folder in parser.folders:
         path = folder.get_path()
         assert isinstance(path, str)
         assert len(path) > 0
+
 
 def test_macos26_export_functionality(macos26_database):
     """Test export functionality with macOS 26 database."""
@@ -198,6 +200,7 @@ def test_macos26_export_functionality(macos26_database):
     assert "This note has tags" in note_titles
     assert "This note is password protected" in note_titles
 
+
 def test_macos26_deleted_folder_exclusion(macos26_db_connection):
     """Test that deleted folders are properly excluded in macOS 26 database."""
     accounts = macos26_db_connection.get_accounts()
@@ -221,6 +224,7 @@ def test_macos26_deleted_folder_exclusion(macos26_db_connection):
 
     # Our method should return the same count as non-deleted folders
     assert len(folders) == non_deleted_folders
+
 
 def test_macos26_schema_features(macos26_db_connection):
     """Test macOS 26 specific schema features."""

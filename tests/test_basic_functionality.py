@@ -110,12 +110,9 @@ def test_export_structure(test_database):
         assert hasattr(folder, "parent_id")
 
         # Test folder path functionality
-        folders_dict = {f.id: f for f in folders_list}
         paths = [f.get_path() for f in folders_list]
         assert len(paths) == 6
-        assert any(
-            "/" in path for path in paths
-        )  # Some paths should have hierarchy
+        assert any("/" in path for path in paths)  # Some paths should have hierarchy
 
 
 def test_folder_model_methods():

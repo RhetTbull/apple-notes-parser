@@ -37,7 +37,9 @@ def test_accounts_extraction(database_with_connection, database_metadata):
     assert on_my_mac_account.name == database_metadata["account_name"]
 
 
-def test_folders_extraction_and_hierarchy(database_with_connection, sample_folders_data):
+def test_folders_extraction_and_hierarchy(
+    database_with_connection, sample_folders_data
+):
     """Test extraction of folders and their hierarchy."""
     accounts_list = database_with_connection.get_accounts()
     accounts_dict = {acc.id: acc for acc in accounts_list}
@@ -137,16 +139,13 @@ def test_specific_notes_content(database_with_connection, sample_notes_data):
         == sample_notes_data["tagged_note"]["password_protected"]
     )
     assert (
-        tagged_note.applescript_id
-        == sample_notes_data["tagged_note"]["applescript_id"]
+        tagged_note.applescript_id == sample_notes_data["tagged_note"]["applescript_id"]
     )
     # Tags should be extracted (may be empty if hashtag extraction needs improvement)
     assert tagged_note.tags is not None
 
     # Test password protected note
-    protected_note = notes_by_title.get(
-        sample_notes_data["protected_note"]["title"]
-    )
+    protected_note = notes_by_title.get(sample_notes_data["protected_note"]["title"])
     assert protected_note is not None
     assert (
         protected_note.is_password_protected
@@ -158,9 +157,7 @@ def test_specific_notes_content(database_with_connection, sample_notes_data):
     )
 
     # Test note with attachment
-    attachment_note = notes_by_title.get(
-        sample_notes_data["attachment_note"]["title"]
-    )
+    attachment_note = notes_by_title.get(sample_notes_data["attachment_note"]["title"])
     assert attachment_note is not None
     assert (
         attachment_note.applescript_id
@@ -168,12 +165,8 @@ def test_specific_notes_content(database_with_connection, sample_notes_data):
     )
 
     # Test that attachments are loaded
-    assert attachment_note.has_attachments(), (
-        "Attachment note should have attachments"
-    )
-    assert len(attachment_note.attachments) >= 1, (
-        "Should have at least one attachment"
-    )
+    assert attachment_note.has_attachments(), "Attachment note should have attachments"
+    assert len(attachment_note.attachments) >= 1, "Should have at least one attachment"
 
     # Test attachment properties
     first_attachment = attachment_note.attachments[0]
@@ -188,13 +181,9 @@ def test_specific_notes_content(database_with_connection, sample_notes_data):
     assert first_attachment.is_audio is False
 
     # Test subfolder note
-    subfolder_note = notes_by_title.get(
-        sample_notes_data["subfolder_note"]["title"]
-    )
+    subfolder_note = notes_by_title.get(sample_notes_data["subfolder_note"]["title"])
     assert subfolder_note is not None
-    assert (
-        subfolder_note.folder.name == sample_notes_data["subfolder_note"]["folder"]
-    )
+    assert subfolder_note.folder.name == sample_notes_data["subfolder_note"]["folder"]
     assert (
         subfolder_note.applescript_id
         == sample_notes_data["subfolder_note"]["applescript_id"]
@@ -355,9 +344,7 @@ def test_attachment_functionality(test_database, sample_notes_data):
     # Test specific attachment note
     attachment_note_title = sample_notes_data["attachment_note"]["title"]
     attachment_notes = [
-        note
-        for note in notes_with_attachments
-        if note.title == attachment_note_title
+        note for note in notes_with_attachments if note.title == attachment_note_title
     ]
     assert len(attachment_notes) == 1, (
         f"Should find exactly one note titled '{attachment_note_title}'"
@@ -391,12 +378,8 @@ def test_attachment_functionality(test_database, sample_notes_data):
     )
 
     # Verify PDF attachment properties
-    pdf_attachments = [
-        att for att in all_attachments if att.filename == "bitcoin.pdf"
-    ]
-    assert len(pdf_attachments) == 1, (
-        "Should find exactly one bitcoin.pdf attachment"
-    )
+    pdf_attachments = [att for att in all_attachments if att.filename == "bitcoin.pdf"]
+    assert len(pdf_attachments) == 1, "Should find exactly one bitcoin.pdf attachment"
 
     pdf_attachment = pdf_attachments[0]
     assert pdf_attachment.file_size == 184292
@@ -484,6 +467,4 @@ def test_get_note_by_applescript_id(test_database, sample_notes_data):
     # Test with non-existent AppleScript ID
     non_existent_id = "x-coredata://FAKE-UUID/ICNote/p999"
     note_not_found = parser.get_note_by_applescript_id(non_existent_id)
-    assert note_not_found is None, (
-        "Should return None for non-existent AppleScript ID"
-    )
+    assert note_not_found is None, "Should return None for non-existent AppleScript ID"

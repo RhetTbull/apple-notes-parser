@@ -56,7 +56,6 @@ def test_macos14_folder_structure(macos14_db_connection):
     accounts = macos14_db_connection.get_accounts()
     accounts_dict = {acc.id: acc for acc in accounts}
     folders = macos14_db_connection.get_folders(accounts_dict)
-    folders_dict = {f.id: f for f in folders}
 
     # Verify expected folders exist
     folder_names = {f.name for f in folders}
@@ -157,7 +156,10 @@ def test_macos14_applescript_ids(macos14_db_connection):
     notes_by_title = {n.title: n for n in notes if n.title}
     plain_note = notes_by_title.get("This is a plain note")
     assert plain_note is not None
-    assert plain_note.applescript_id == "x-coredata://96FBBB9A-C1A9-4216-ACA4-1BE22EC8E9B4/ICNote/p13"
+    assert (
+        plain_note.applescript_id
+        == "x-coredata://96FBBB9A-C1A9-4216-ACA4-1BE22EC8E9B4/ICNote/p13"
+    )
 
 
 def test_macos14_attachment_functionality(macos_14_database):
@@ -169,9 +171,11 @@ def test_macos14_attachment_functionality(macos_14_database):
     assert len(notes_with_attachments) >= 1
 
     # Find the specific attachment note
-    attachment_notes = [note for note in parser.notes if note.title == "This note has an attachment"]
+    attachment_notes = [
+        note for note in parser.notes if note.title == "This note has an attachment"
+    ]
     assert len(attachment_notes) == 1
-    
+
     attachment_note = attachment_notes[0]
     assert len(attachment_note.attachments) >= 1
 
@@ -197,20 +201,24 @@ def test_macos14_password_protection_detection(macos_14_database):
 def test_macos14_deleted_notes_support(macos_14_database):
     """Test that macOS 14 properly handles deleted notes."""
     parser = AppleNotesParser(macos_14_database)
-    
+
     # Find the recently deleted folder
     recently_deleted_folder = None
     for folder in parser.folders:
         if folder.name == "Recently Deleted":
             recently_deleted_folder = folder
             break
-    
-    assert recently_deleted_folder is not None, "Recently Deleted folder should exist in macOS 14"
-    
+
+    assert recently_deleted_folder is not None, (
+        "Recently Deleted folder should exist in macOS 14"
+    )
+
     # Find notes in recently deleted folder
-    deleted_notes = [note for note in parser.notes if note.folder.name == "Recently Deleted"]
+    deleted_notes = [
+        note for note in parser.notes if note.folder.name == "Recently Deleted"
+    ]
     assert len(deleted_notes) >= 1, "Should have at least one deleted note"
-    
+
     # Verify deleted note properties
     deleted_note = deleted_notes[0]
     assert deleted_note.title == "This is a deleted note"
@@ -285,17 +293,20 @@ def test_macos14_export_functionality(macos_14_database):
 def test_macos14_folder_path_reconstruction(macos_14_database):
     """Test folder path reconstruction for macOS 14."""
     parser = AppleNotesParser(macos_14_database)
-    folders_dict = parser.folders_dict
 
     # Test deep hierarchy path
-    deep_notes = [note for note in parser.notes if note.title == "This note is deeply buried"]
+    deep_notes = [
+        note for note in parser.notes if note.title == "This note is deeply buried"
+    ]
     assert len(deep_notes) == 1
     deep_note = deep_notes[0]
     folder_path = deep_note.get_folder_path()
     assert folder_path == "Folder2/Subfolder/Subsubfolder"
 
     # Test single level folder
-    folder_notes = [note for note in parser.notes if note.title == "This note is in a folder"]
+    folder_notes = [
+        note for note in parser.notes if note.title == "This note is in a folder"
+    ]
     assert len(folder_notes) == 1
     folder_note = folder_notes[0]
     folder_path = folder_note.get_folder_path()
@@ -316,7 +327,6 @@ def test_macos14_parser_integration(macos_14_database):
     assert len(search_results) > 0
 
     # Folder functionality - verify all folders have valid paths
-    folders_dict = parser.folders_dict
     for folder in parser.folders:
         path = folder.get_path()
         assert isinstance(path, str)
@@ -328,40 +338,44 @@ def test_macos14_database_schema_compatibility(macos14_db_connection):
     cursor = macos14_db_connection.connection.cursor()
 
     # Check that we can query basic tables
-    cursor.execute("SELECT COUNT(*) FROM ZICCLOUDSYNCINGOBJECT WHERE ZTITLE2 IS NOT NULL")
+    cursor.execute(
+        "SELECT COUNT(*) FROM ZICCLOUDSYNCINGOBJECT WHERE ZTITLE2 IS NOT NULL"
+    )
     folder_count = cursor.fetchone()[0]
     assert folder_count >= 6
 
-    cursor.execute("SELECT COUNT(*) FROM ZICCLOUDSYNCINGOBJECT WHERE ZTITLE1 IS NOT NULL")
+    cursor.execute(
+        "SELECT COUNT(*) FROM ZICCLOUDSYNCINGOBJECT WHERE ZTITLE1 IS NOT NULL"
+    )
     note_count = cursor.fetchone()[0]
     assert note_count >= 7
 
     # Verify database structure
     cursor.execute("PRAGMA table_info(ZICCLOUDSYNCINGOBJECT)")
     columns = [row[1] for row in cursor.fetchall()]
-    
+
     # Basic columns should exist
-    assert "ZTITLE1" in columns   # Note titles
-    assert "ZTITLE2" in columns   # Folder titles
-    assert "ZNOTEDATA" in columns # Note content
+    assert "ZTITLE1" in columns  # Note titles
+    assert "ZTITLE2" in columns  # Folder titles
+    assert "ZNOTEDATA" in columns  # Note content
 
 
 def test_macos14_version_specific_features(macos_14_database):
     """Test macOS 14 specific features and improvements."""
     parser = AppleNotesParser(macos_14_database)
-    
+
     # macOS 14 should have good attachment support
     notes_with_attachments = parser.get_notes_with_attachments()
     assert len(notes_with_attachments) >= 1
-    
+
     # Password protection should work
     protected_notes = parser.get_protected_notes()
     assert len(protected_notes) >= 1
-    
+
     # Recently deleted folder should be available
     folder_names = {folder.name for folder in parser.folders}
     assert "Recently Deleted" in folder_names
-    
+
     # All basic parser operations should work
     export_data = parser.export_notes_to_dict()
     assert len(export_data["notes"]) == 8
@@ -369,7 +383,9 @@ def test_macos14_version_specific_features(macos_14_database):
     assert len(export_data["accounts"]) == 1
 
     # Verify that notes with attachments can be found
-    attachment_notes = [note for note in parser.notes if note.title == "This note has an attachment"]
+    attachment_notes = [
+        note for note in parser.notes if note.title == "This note has an attachment"
+    ]
     assert len(attachment_notes) == 1
 
 
@@ -391,10 +407,10 @@ def test_macos14_attachment_extraction(macos14_db_connection):
         if note.title == "This note has an attachment":
             attachment_note = note
             break
-    
+
     assert attachment_note is not None
     assert len(attachment_note.attachments) >= 1
-    
+
     # Test attachment properties
     attachment = attachment_note.attachments[0]
     assert attachment.filename is not None
@@ -432,22 +448,22 @@ def test_macos14_note_content_extraction(macos14_db_connection):
 def test_macos14_backward_compatibility(macos_14_database):
     """Test that macOS 14 maintains compatibility with core functionality."""
     parser = AppleNotesParser(macos_14_database)
-    
+
     # All core functionality should work regardless of version
     assert len(parser.accounts) >= 1
     assert len(parser.folders) >= 1
     assert len(parser.notes) >= 1
-    
+
     # Search should work
     search_results = parser.search_notes("note")
     assert isinstance(search_results, list)
-    
+
     # Export should work
     export_data = parser.export_notes_to_dict()
     assert "accounts" in export_data
     assert "folders" in export_data
     assert "notes" in export_data
-    
+
     # Password protection detection should work
     protected_notes = parser.get_protected_notes()
     assert isinstance(protected_notes, list)
@@ -460,18 +476,18 @@ def test_macos14_backward_compatibility(macos_14_database):
 def test_macos14_enhanced_features(macos_14_database):
     """Test macOS 14 enhanced features compared to earlier versions."""
     parser = AppleNotesParser(macos_14_database)
-    
+
     # macOS 14 has better attachment support than earlier versions
     all_attachments = parser.get_all_attachments()
     assert isinstance(all_attachments, list)
     assert len(all_attachments) >= 1
-    
+
     # Should be able to filter by attachment type
     document_notes = parser.get_notes_by_attachment_type("document")
     assert isinstance(document_notes, list)
-    
+
     # All attachments should have proper metadata
     for attachment in all_attachments:
         assert attachment.uuid is not None
-        assert hasattr(attachment, 'filename')
-        assert hasattr(attachment, 'file_size')
+        assert hasattr(attachment, "filename")
+        assert hasattr(attachment, "file_size")

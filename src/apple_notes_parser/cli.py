@@ -444,6 +444,24 @@ def cmd_attachments(args: argparse.Namespace) -> None:
                 categories.append("Document")
             print(", ".join(categories) if categories else "Other")
 
+            # Show data availability
+            has_blob_data = attachment.has_data
+            has_media_file = attachment.has_media_file(args.notes_container)
+
+            if has_media_file and has_blob_data:
+                print("   Data: Media file + BLOB data available")
+            elif has_media_file:
+                media_path = attachment.get_media_file_path(args.notes_container)
+                if media_path:
+                    file_size = media_path.stat().st_size if media_path.exists() else 0
+                    print(f"   Data: Media file available ({format_size(file_size)})")
+                else:
+                    print("   Data: Media file available")
+            elif has_blob_data:
+                print("   Data: BLOB data available for extraction")
+            else:
+                print("   Data: Not available (remote or missing)")
+
             if attachment.file_size:
                 total_size += attachment.file_size
 
@@ -451,6 +469,39 @@ def cmd_attachments(args: argparse.Namespace) -> None:
 
         if attachments:
             print(f"Total size: {format_size(total_size)}")
+
+            # Show data extraction summary
+            attachments_with_data = [
+                att
+                for att in attachments
+                if att.has_data or att.has_media_file(args.notes_container)
+            ]
+            print(f"Attachments with extractable data: {len(attachments_with_data)}")
+
+        # Save attachments if requested
+        if args.save:
+            try:
+                print(f"\n💾 Saving attachments to: {args.save}")
+                decompress = not args.no_decompress
+
+                # Save all attachments (the parser method handles filtering internally)
+                save_results = parser.save_all_attachments(
+                    args.save, decompress, args.notes_container
+                )
+
+                if save_results:
+                    successful = sum(1 for success in save_results.values() if success)
+                    total = len(save_results)
+                    print(f"✅ Successfully saved {successful}/{total} attachments:")
+
+                    for filename, success in save_results.items():
+                        status = "✅" if success else "❌"
+                        print(f"   {status} {filename}")
+                else:
+                    print("⚠️  No attachments with extractable data found")
+
+            except Exception as e:
+                print(f"❌ Error saving attachments: {e}")
 
     except AppleNotesParserError as e:
         handle_parser_error(e)
@@ -600,6 +651,19 @@ Examples:
         "--type",
         choices=["image", "video", "audio", "document"],
         help="Filter by attachment type",
+    )
+    attachments_parser.add_argument(
+        "--save",
+        help="Save attachments to the specified directory",
+    )
+    attachments_parser.add_argument(
+        "--no-decompress",
+        action="store_true",
+        help="Save raw data without decompression (for debugging)",
+    )
+    attachments_parser.add_argument(
+        "--notes-container",
+        help="Path to Apple Notes container (auto-detected if not specified)",
     )
     attachments_parser.set_defaults(func=cmd_attachments)
 

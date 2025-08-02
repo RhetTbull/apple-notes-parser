@@ -56,7 +56,6 @@ def test_macos12_folder_structure(macos12_db_connection):
     accounts = macos12_db_connection.get_accounts()
     accounts_dict = {acc.id: acc for acc in accounts}
     folders = macos12_db_connection.get_folders(accounts_dict)
-    folders_dict = {f.id: f for f in folders}
 
     # Verify expected folders exist
     folder_names = {f.name for f in folders}
@@ -149,7 +148,10 @@ def test_macos12_applescript_ids(macos12_db_connection):
     notes_by_title = {n.title: n for n in notes if n.title}
     simple_note = notes_by_title.get("This is a note")
     assert simple_note is not None
-    assert simple_note.applescript_id == "x-coredata://FABDAB03-8EF2-41B9-9944-193D67BE0365/ICNote/p5"
+    assert (
+        simple_note.applescript_id
+        == "x-coredata://FABDAB03-8EF2-41B9-9944-193D67BE0365/ICNote/p5"
+    )
 
 
 def test_macos12_tag_functionality(macos_12_database):
@@ -250,10 +252,14 @@ def test_macos12_deleted_notes_support(macos_12_database):
             recently_deleted_folder = folder
             break
 
-    assert recently_deleted_folder is not None, "Recently Deleted folder should exist in macOS 12"
+    assert recently_deleted_folder is not None, (
+        "Recently Deleted folder should exist in macOS 12"
+    )
 
     # Find notes in recently deleted folder
-    deleted_notes = [note for note in parser.notes if note.folder.name == "Recently Deleted"]
+    deleted_notes = [
+        note for note in parser.notes if note.folder.name == "Recently Deleted"
+    ]
     assert len(deleted_notes) >= 1, "Should have at least one deleted note"
 
     # Verify deleted note properties
@@ -265,17 +271,20 @@ def test_macos12_deleted_notes_support(macos_12_database):
 def test_macos12_folder_path_reconstruction(macos_12_database):
     """Test folder path reconstruction for macOS 12."""
     parser = AppleNotesParser(macos_12_database)
-    folders_dict = parser.folders_dict
 
     # Test deep hierarchy path
-    deep_notes = [note for note in parser.notes if note.title == "This note is deeply buried"]
+    deep_notes = [
+        note for note in parser.notes if note.title == "This note is deeply buried"
+    ]
     assert len(deep_notes) == 1
     deep_note = deep_notes[0]
     folder_path = deep_note.get_folder_path()
     assert folder_path == "Folder2/Subfolder/Subsubfolder"
 
     # Test single level folder
-    folder_notes = [note for note in parser.notes if note.title == "This note is in a folder"]
+    folder_notes = [
+        note for note in parser.notes if note.title == "This note is in a folder"
+    ]
     assert len(folder_notes) == 1
     folder_note = folder_notes[0]
     folder_path = folder_note.get_folder_path()
@@ -296,7 +305,6 @@ def test_macos12_parser_integration(macos_12_database):
     assert len(search_results) > 0
 
     # Folder functionality - verify all folders have valid paths
-    folders_dict = parser.folders_dict
     for folder in parser.folders:
         path = folder.get_path()
         assert isinstance(path, str)
@@ -308,11 +316,15 @@ def test_macos12_database_schema_compatibility(macos12_db_connection):
     cursor = macos12_db_connection.connection.cursor()
 
     # Check that we can query basic tables
-    cursor.execute("SELECT COUNT(*) FROM ZICCLOUDSYNCINGOBJECT WHERE ZTITLE2 IS NOT NULL")
+    cursor.execute(
+        "SELECT COUNT(*) FROM ZICCLOUDSYNCINGOBJECT WHERE ZTITLE2 IS NOT NULL"
+    )
     folder_count = cursor.fetchone()[0]
     assert folder_count >= 6
 
-    cursor.execute("SELECT COUNT(*) FROM ZICCLOUDSYNCINGOBJECT WHERE ZTITLE1 IS NOT NULL")
+    cursor.execute(
+        "SELECT COUNT(*) FROM ZICCLOUDSYNCINGOBJECT WHERE ZTITLE1 IS NOT NULL"
+    )
     note_count = cursor.fetchone()[0]
     assert note_count >= 7
 
@@ -321,9 +333,9 @@ def test_macos12_database_schema_compatibility(macos12_db_connection):
     columns = [row[1] for row in cursor.fetchall()]
 
     # Basic columns should exist
-    assert "ZTITLE1" in columns   # Note titles
-    assert "ZTITLE2" in columns   # Folder titles
-    assert "ZNOTEDATA" in columns # Note content
+    assert "ZTITLE1" in columns  # Note titles
+    assert "ZTITLE2" in columns  # Folder titles
+    assert "ZNOTEDATA" in columns  # Note content
 
 
 def test_macos12_version_specific_features(macos_12_database):

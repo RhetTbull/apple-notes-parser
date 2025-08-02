@@ -128,7 +128,9 @@ def database_metadata():
 @pytest.fixture
 def macos_12_database():
     """Fixture providing path to the macOS 12 NoteStore database."""
-    database_path = Path(__file__).parent / "data" / "NoteStore-macOS-12-Monterey.sqlite"
+    database_path = (
+        Path(__file__).parent / "data" / "NoteStore-macOS-12-Monterey.sqlite"
+    )
     if not database_path.exists():
         pytest.skip(f"macOS 12 database not found at {database_path}")
     return str(database_path)
@@ -158,7 +160,15 @@ def macos_15_database():
     return test_database()
 
 
-@pytest.fixture(params=["macos_12_monterey", "macos_13_ventura", "macos_14_sonoma", "macos_15_sequoia", "macos_26_tahoe"])
+@pytest.fixture(
+    params=[
+        "macos_12_monterey",
+        "macos_13_ventura",
+        "macos_14_sonoma",
+        "macos_15_sequoia",
+        "macos_26_tahoe",
+    ]
+)
 def versioned_database(request):
     """Parameterized fixture for testing across different database versions."""
     if request.param == "macos_12_monterey":
@@ -277,7 +287,9 @@ def version_metadata(versioned_database):
             },
             "tagged_notes": [],  # No tags in macOS 14 sample
             "protected_notes": ["This note is password protected"],
-            "attachment_notes": ["This note has an attachment"],  # macOS 14 has attachment
+            "attachment_notes": [
+                "This note has an attachment"
+            ],  # macOS 14 has attachment
             "formatted_notes": ["This note has special formatting"],
             "deleted_notes": ["This is a deleted note"],  # macOS 14 has deleted notes
         }

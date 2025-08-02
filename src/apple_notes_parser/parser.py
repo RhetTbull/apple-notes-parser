@@ -278,6 +278,138 @@ class AppleNotesParser:
             attachments.extend(note.attachments)
         return attachments
 
+    def get_attachments_with_data(self) -> list[Attachment]:
+        """Get all attachments that have extractable data.
+
+        Returns:
+            list[Attachment]: List of attachments with BLOB data available for extraction.
+        """
+        return [att for att in self.get_all_attachments() if att.has_data]
+
+    def save_all_attachments(
+        self,
+        output_dir: str,
+        decompress: bool = True,
+        notes_container_path: str | None = None,
+    ) -> dict[str, bool]:
+        """Save all attachments with data to a directory.
+
+        Args:
+            output_dir: Directory path where attachments should be saved.
+            decompress: If True, automatically decompress gzipped data. Defaults to True.
+            notes_container_path: Path to Apple Notes container. If None, attempts to find automatically.
+
+        Returns:
+            dict[str, bool]: Dictionary mapping attachment filenames to save success status.
+
+        Raises:
+            IOError: If directory creation or file writing fails.
+        """
+        from pathlib import Path
+
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        results = {}
+        # Get all attachments (both with BLOB data and media files)
+        all_attachments = self.get_all_attachments()
+
+        for attachment in all_attachments:
+            # Check if attachment has either BLOB data or media file
+            has_blob_data = attachment.has_data
+            has_media_file = attachment.has_media_file(notes_container_path)
+
+            if not (has_blob_data or has_media_file):
+                continue
+
+            # Use original filename if available, otherwise generate one
+            if attachment.filename:
+                filename = attachment.filename
+            else:
+                filename = attachment.get_suggested_filename()
+
+            # Ensure unique filenames by adding ID if needed
+            counter = 1
+            original_filename = filename
+            while (output_path / filename).exists():
+                name_parts = original_filename.rsplit(".", 1)
+                if len(name_parts) == 2:
+                    filename = f"{name_parts[0]}_{counter}.{name_parts[1]}"
+                else:
+                    filename = f"{original_filename}_{counter}"
+                counter += 1
+
+            file_path = output_path / filename
+
+            # Use new save_attachment method that prefers media files
+            if has_media_file:
+                success = attachment.save_attachment(
+                    file_path, notes_container_path, prefer_media_file=True
+                )
+            else:
+                # Fall back to BLOB data with decompression option
+                success = attachment.save_to_file(file_path, decompress=decompress)
+
+            results[filename] = success
+
+        return results
+
+    def save_note_attachments(
+        self,
+        note: Note,
+        output_dir: str,
+        decompress: bool = True,
+        notes_container_path: str | None = None,
+    ) -> dict[str, bool]:
+        """Save all attachments from a specific note.
+
+        Args:
+            note: Note object whose attachments should be saved.
+            output_dir: Directory path where attachments should be saved.
+            decompress: If True, automatically decompress gzipped data. Defaults to True.
+            notes_container_path: Path to Apple Notes container. If None, attempts to find automatically.
+
+        Returns:
+            dict[str, bool]: Dictionary mapping attachment filenames to save success status.
+
+        Raises:
+            IOError: If directory creation or file writing fails.
+        """
+        from pathlib import Path
+
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        results = {}
+
+        for attachment in note.attachments:
+            # Check if attachment has either BLOB data or media file
+            has_blob_data = attachment.has_data
+            has_media_file = attachment.has_media_file(notes_container_path)
+
+            if not (has_blob_data or has_media_file):
+                continue
+
+            # Use original filename if available
+            if attachment.filename:
+                filename = attachment.filename
+            else:
+                filename = attachment.get_suggested_filename()
+
+            file_path = output_path / filename
+
+            # Use new save_attachment method that prefers media files
+            if has_media_file:
+                success = attachment.save_attachment(
+                    file_path, notes_container_path, prefer_media_file=True
+                )
+            else:
+                success = attachment.save_to_file(file_path, decompress=decompress)
+
+            results[filename] = success
+
+        return results
+
     def search_notes(self, query: str, case_sensitive: bool = False) -> list[Note]:
         """Search for notes containing specific text.
 

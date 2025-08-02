@@ -35,11 +35,7 @@ def test_basic_data_loading(versioned_database, version_metadata):
 
         # Find expected account
         expected_account = next(
-            (
-                acc
-                for acc in accounts
-                if acc.name == version_metadata["account_name"]
-            ),
+            (acc for acc in accounts if acc.name == version_metadata["account_name"]),
             None,
         )
         assert expected_account is not None
@@ -54,13 +50,13 @@ def test_basic_data_loading(versioned_database, version_metadata):
         notes = db.get_notes(accounts_dict, folders_dict)
         assert len(notes) == version_metadata["total_notes"]
 
+
 def test_folder_hierarchy_structure(versioned_database, version_metadata):
     """Test folder hierarchy structure is correctly parsed."""
     with AppleNotesDatabase(versioned_database) as db:
         accounts_list = db.get_accounts()
         accounts_dict = {acc.id: acc for acc in accounts_list}
         folders_list = db.get_folders(accounts_dict)
-        folders_dict = {folder.id: folder for folder in folders_list}
 
         folders_by_name = {f.name: f for f in folders_list}
 
@@ -87,6 +83,7 @@ def test_folder_hierarchy_structure(versioned_database, version_metadata):
                 assert parent_folder is not None
                 assert parent_folder.name == folder_info["parent"]
 
+
 def test_applescript_id_construction(versioned_database, version_metadata):
     """Test AppleScript ID construction works for all versions."""
     with AppleNotesDatabase(versioned_database) as db:
@@ -103,6 +100,7 @@ def test_applescript_id_construction(versioned_database, version_metadata):
             assert note.applescript_id.startswith("x-coredata://")
             assert "/ICNote/p" in note.applescript_id
 
+
 def test_password_protection_detection(versioned_database, version_metadata):
     """Test password protection detection works across versions."""
     parser = AppleNotesParser(versioned_database)
@@ -116,6 +114,7 @@ def test_password_protection_detection(versioned_database, version_metadata):
         protected_titles = [note.title for note in protected_notes]
         for expected_title in expected_protected:
             assert expected_title in protected_titles
+
 
 def test_export_functionality(versioned_database, version_metadata):
     """Test data export works across versions."""

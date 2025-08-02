@@ -382,7 +382,10 @@ class AppleNotesDatabase:
                 obj.ZCREATIONDATE,
                 obj.ZMODIFICATIONDATE,
                 obj.ZIDENTIFIER,
-                obj.ZREMOTEFILEURLSTRING
+                obj.ZREMOTEFILEURLSTRING,
+                obj.ZMERGEABLEDATA1,
+                obj.ZMERGEABLEDATA,
+                obj.ZMERGEABLEDATA2
             FROM ZICCLOUDSYNCINGOBJECT obj
             WHERE obj.ZNOTE IS NOT NULL
                 AND (obj.ZFILENAME IS NOT NULL OR obj.ZTITLE IS NOT NULL OR obj.ZFILESIZE > 0 OR obj.ZTYPEUTI IS NOT NULL)
@@ -409,6 +412,9 @@ class AppleNotesDatabase:
                     uuid=row[7],
                     is_remote=row[8] is not None,
                     remote_url=row[8],
+                    mergeable_data1=row[9],
+                    mergeable_data=row[10],
+                    mergeable_data2=row[11],
                 )
                 attachments.append(attachment)
 

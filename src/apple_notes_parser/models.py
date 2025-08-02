@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import gzip
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 
 
 @dataclass
@@ -99,6 +101,9 @@ class Attachment:
     uuid: str | None = None
     is_remote: bool = False
     remote_url: str | None = None
+    mergeable_data1: bytes | None = None  # Primary BLOB data storage
+    mergeable_data: bytes | None = None  # Alternative BLOB data storage
+    mergeable_data2: bytes | None = None  # Additional BLOB data storage
 
     @property
     def file_extension(self) -> str | None:
@@ -189,6 +194,302 @@ class Attachment:
                 for doc_type in ["pdf", "doc", "docx", "rtf", "txt", "pages"]
             )
         return False
+
+    @property
+    def has_data(self) -> bool:
+        """Check if attachment has extractable data.
+
+        Returns:
+            bool: True if attachment has data in any BLOB field, False otherwise.
+        """
+        return any([self.mergeable_data1, self.mergeable_data, self.mergeable_data2])
+
+    def get_raw_data(self) -> bytes | None:
+        """Get raw BLOB data from the attachment.
+
+        Returns:
+            bytes | None: Raw BLOB data from the first available source, or None if no data.
+        """
+        # Try each data field in order of preference
+        for data_field in [
+            self.mergeable_data1,
+            self.mergeable_data,
+            self.mergeable_data2,
+        ]:
+            if data_field:
+                return data_field
+        return None
+
+    def get_decompressed_data(self) -> bytes | None:
+        """Get decompressed attachment data.
+
+        If the raw data is gzipped (detected by magic bytes), decompresses it.
+        Otherwise returns the raw data unchanged.
+
+        Returns:
+            bytes | None: Decompressed attachment data, or None if no data available.
+        """
+        raw_data = self.get_raw_data()
+        if not raw_data:
+            return None
+
+        # Check for gzip magic bytes (1F 8B)
+        if len(raw_data) >= 2 and raw_data[:2] == b"\x1f\x8b":
+            try:
+                return gzip.decompress(raw_data)
+            except gzip.BadGzipFile:
+                # If gzip decompression fails, return raw data
+                return raw_data
+
+        return raw_data
+
+    def save_to_file(self, output_path: str | Path, decompress: bool = True) -> bool:
+        """Save attachment data to a file.
+
+        Args:
+            output_path: Path where the attachment should be saved.
+            decompress: If True, automatically decompress gzipped data. Defaults to True.
+
+        Returns:
+            bool: True if save was successful, False if no data available.
+
+        Raises:
+            IOError: If file writing fails.
+            PermissionError: If insufficient permissions to write file.
+        """
+        if decompress:
+            data = self.get_decompressed_data()
+        else:
+            data = self.get_raw_data()
+
+        if not data:
+            return False
+
+        output_path = Path(output_path)
+
+        # Create parent directories if they don't exist
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Write data to file
+        with open(output_path, "wb") as f:
+            f.write(data)
+
+        return True
+
+    def get_suggested_filename(self) -> str:
+        """Get a suggested filename for saving the attachment.
+
+        Returns:
+            str: Suggested filename based on attachment metadata.
+        """
+        # Use existing filename if available
+        if self.filename:
+            return self.filename
+
+        # Generate filename based on ID and type
+        extension = ""
+        if self.type_uti:
+            # Map common UTIs to extensions
+            uti_to_ext = {
+                "com.adobe.pdf": ".pdf",
+                "public.jpeg": ".jpg",
+                "public.png": ".png",
+                "public.tiff": ".tiff",
+                "public.heic": ".heic",
+                "public.mp4": ".mp4",
+                "public.mov": ".mov",
+                "public.mp3": ".mp3",
+                "public.m4a": ".m4a",
+                "public.plain-text": ".txt",
+                "public.rtf": ".rtf",
+                "com.microsoft.word.doc": ".doc",
+                "com.apple.notes.table": ".table",
+                "com.apple.drawing.2": ".drawing",
+            }
+            extension = uti_to_ext.get(self.type_uti, "")
+
+        return f"attachment_{self.id}{extension}"
+
+    def get_media_file_path(
+        self, notes_container_path: str | Path | None = None
+    ) -> Path | None:
+        """Get the path to the attachment file in the Media folder.
+
+        Args:
+            notes_container_path: Path to Apple Notes container. If None, attempts to find automatically.
+
+        Returns:
+            Path | None: Path to the attachment file, or None if not found.
+        """
+        if not self.uuid:
+            return None
+
+        # Try to find the Notes container automatically if not provided
+        if notes_container_path is None:
+            notes_container_path = self._find_notes_container()
+            if not notes_container_path:
+                return None
+
+        container_path = Path(notes_container_path)
+
+        # Find the account folder in the container
+        accounts_path = container_path / "Accounts"
+        if not accounts_path.exists():
+            return None
+
+        # Look for account folders - typically only one for local accounts
+        account_folders = [d for d in accounts_path.iterdir() if d.is_dir()]
+
+        for account_folder in account_folders:
+            media_path = account_folder / "Media" / self.uuid
+            if media_path.exists():
+                # Look for the actual file in subdirectories
+                for item in media_path.rglob("*"):
+                    if item.is_file() and not item.name.startswith("."):
+                        return item
+
+        return None
+
+    def _find_notes_container(self) -> Path | None:
+        """Attempt to find the Apple Notes container automatically.
+
+        Returns:
+            Path | None: Path to the Notes container, or None if not found.
+        """
+        # Common paths for Apple Notes container
+        possible_paths = [
+            Path.home() / "Library" / "Group Containers" / "group.com.apple.notes",
+            Path.home()
+            / "Library"
+            / "Containers"
+            / "com.apple.Notes"
+            / "Data"
+            / "Library"
+            / "Notes",
+        ]
+
+        for path in possible_paths:
+            if path.exists() and (path / "NoteStore.sqlite").exists():
+                return path
+
+        return None
+
+    def has_media_file(self, notes_container_path: str | Path | None = None) -> bool:
+        """Check if the attachment has a media file available.
+
+        Args:
+            notes_container_path: Path to Apple Notes container. If None, attempts to find automatically.
+
+        Returns:
+            bool: True if media file exists, False otherwise.
+        """
+        return self.get_media_file_path(notes_container_path) is not None
+
+    def copy_media_file(
+        self, destination: str | Path, notes_container_path: str | Path | None = None
+    ) -> bool:
+        """Copy the attachment's media file to a destination.
+
+        Args:
+            destination: Path where the file should be copied.
+            notes_container_path: Path to Apple Notes container. If None, attempts to find automatically.
+
+        Returns:
+            bool: True if copy was successful, False otherwise.
+
+        Raises:
+            IOError: If file copying fails.
+        """
+        source_path = self.get_media_file_path(notes_container_path)
+        if not source_path:
+            return False
+
+        dest_path = Path(destination)
+
+        # Create parent directories if they don't exist
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+
+        try:
+            import shutil
+
+            shutil.copy2(source_path, dest_path)
+            return True
+        except OSError:
+            return False
+
+    def get_attachment_data(
+        self, notes_container_path: str | Path | None = None
+    ) -> bytes | None:
+        """Get attachment data, preferring media files over BLOB data.
+
+        Args:
+            notes_container_path: Path to Apple Notes container. If None, attempts to find automatically.
+
+        Returns:
+            bytes | None: Attachment data from media file or BLOB, or None if not available.
+        """
+        # First try to get data from media file
+        media_path = self.get_media_file_path(notes_container_path)
+        if media_path and media_path.exists():
+            try:
+                return media_path.read_bytes()
+            except OSError:
+                pass
+
+        # Fall back to BLOB data
+        return self.get_decompressed_data()
+
+    def save_attachment(
+        self,
+        output_path: str | Path,
+        notes_container_path: str | Path | None = None,
+        prefer_media_file: bool = True,
+    ) -> bool:
+        """Save attachment data to a file, preferring media files over BLOB data.
+
+        Args:
+            output_path: Path where the attachment should be saved.
+            notes_container_path: Path to Apple Notes container. If None, attempts to find automatically.
+            prefer_media_file: If True, prefer media file over BLOB data. Defaults to True.
+
+        Returns:
+            bool: True if save was successful, False if no data available.
+
+        Raises:
+            IOError: If file writing fails.
+        """
+        data = None
+
+        if prefer_media_file:
+            # Try media file first
+            media_path = self.get_media_file_path(notes_container_path)
+            if media_path and media_path.exists():
+                # Direct copy is more efficient for large files
+                return self.copy_media_file(output_path, notes_container_path)
+
+            # Fall back to BLOB data
+            data = self.get_decompressed_data()
+        else:
+            # Try BLOB data first, then media file
+            data = self.get_decompressed_data()
+            if not data:
+                media_path = self.get_media_file_path(notes_container_path)
+                if media_path and media_path.exists():
+                    return self.copy_media_file(output_path, notes_container_path)
+
+        if not data:
+            return False
+
+        output_path = Path(output_path)
+
+        # Create parent directories if they don't exist
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Write data to file
+        with open(output_path, "wb") as f:
+            f.write(data)
+
+        return True
 
     def __str__(self) -> str:
         """Return string representation of Attachment.
