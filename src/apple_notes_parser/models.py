@@ -348,6 +348,16 @@ class Attachment:
                     if item.is_file() and not item.name.startswith("."):
                         return item
 
+        # If UUID-based search failed and we have a filename, search by filename
+        if self.filename:
+            for account_folder in account_folders:
+                media_base = account_folder / "Media"
+                if media_base.exists():
+                    # Search all media directories for the filename
+                    for item in media_base.rglob(self.filename):
+                        if item.is_file():
+                            return item
+
         return None
 
     def _find_notes_container(self) -> Path | None:

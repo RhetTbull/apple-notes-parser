@@ -20,7 +20,7 @@ Write the code for python 3.11 compatibility and later. Use type hints and annot
 
 # Testing
 
-IMPORTANT: ALWAYS write tests using pytest style test functions. NEVER write tests using unittest style test classes. Use pytest fixtures for setup and teardown when appropriate.
+IMPORTANT: ALWAYS write tests using pytest style test functions. NEVER write tests using unittest style test classes. Use pytest fixtures for setup and teardown when appropriate. DO NOT CREATE TEST CLASSES. ALWAYS USE TEST FUNCTIONS WRITTEN IN PYTEST STYLE.
 
 All tests should be written in a way that they can be run independently and in parallel. This means that each test should be self-contained and not rely on any external state or resources.
 
