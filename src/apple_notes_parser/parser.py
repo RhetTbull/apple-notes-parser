@@ -341,14 +341,12 @@ class AppleNotesParser:
 
             file_path = output_path / filename
 
-            # Use new save_attachment method that prefers media files
-            if has_media_file:
-                success = attachment.save_attachment(
-                    file_path, notes_container_path, prefer_media_file=True
-                )
-            else:
-                # Fall back to BLOB data with decompression option
-                success = attachment.save_to_file(file_path, decompress=decompress)
+            # Use save_to_file method which now seamlessly handles both media files and BLOB data
+            success = attachment.save_to_file(
+                file_path,
+                decompress=decompress,
+                notes_container_path=notes_container_path,
+            )
 
             results[filename] = success
 
@@ -398,13 +396,12 @@ class AppleNotesParser:
 
             file_path = output_path / filename
 
-            # Use new save_attachment method that prefers media files
-            if has_media_file:
-                success = attachment.save_attachment(
-                    file_path, notes_container_path, prefer_media_file=True
-                )
-            else:
-                success = attachment.save_to_file(file_path, decompress=decompress)
+            # Use save_to_file method which now seamlessly handles both media files and BLOB data
+            success = attachment.save_to_file(
+                file_path,
+                decompress=decompress,
+                notes_container_path=notes_container_path,
+            )
 
             results[filename] = success
 

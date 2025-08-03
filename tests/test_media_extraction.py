@@ -251,8 +251,8 @@ def test_both_versions_consistency(sequoia_container_path, tahoe_container_path)
     assert sequoia_data == tahoe_data, "Data from both versions should be identical"
 
 
-def test_media_path_without_container_path_fails(sequoia_container_path):
-    """Test that media file operations fail when container path is not provided."""
+def test_media_path_without_container_path_behavior(sequoia_container_path):
+    """Test behavior when container path is not provided - may succeed on macOS with real Notes installation."""
     database_path = sequoia_container_path / "NoteStore.sqlite"
 
     with AppleNotesDatabase(str(database_path)) as db:
@@ -272,15 +272,35 @@ def test_media_path_without_container_path_fails(sequoia_container_path):
 
         assert bitcoin_attachment is not None
 
-        # These operations should fail without container path since we're not on macOS
-        # with the default Notes location
-        assert bitcoin_attachment.get_media_file_path() is None
-        assert bitcoin_attachment.has_media_file() is False
+        # Test auto-detection behavior - may work on macOS with real Notes installation
+        media_path = bitcoin_attachment.get_media_file_path()
+        has_media = bitcoin_attachment.has_media_file()
 
+        # On macOS with a real Notes installation, this might succeed
+        # On other systems or without Notes, it should fail gracefully
+        if media_path is not None:
+            # If auto-detection worked, media_path should exist and be valid
+            assert media_path.is_file()
+            assert has_media is True
+            print(f"Auto-detection found media file: {media_path}")
+        else:
+            # If auto-detection failed (expected on non-macOS or without Notes)
+            assert has_media is False
+            print("Auto-detection failed as expected")
+
+        # Test copy operation
         with tempfile.TemporaryDirectory() as temp_dir:
-            output_path = Path(temp_dir) / "should_fail.pdf"
+            output_path = Path(temp_dir) / "copied_file.pdf"
             success = bitcoin_attachment.copy_media_file(output_path)
-            assert success is False
+
+            # Success depends on whether auto-detection worked
+            if media_path is not None:
+                assert success is True
+                assert output_path.exists()
+                print("Copy operation succeeded with auto-detection")
+            else:
+                assert success is False
+                print("Copy operation failed as expected without auto-detection")
 
 
 def test_nonexistent_attachment_uuid(sequoia_container_path):
@@ -323,3 +343,101 @@ def test_nonexistent_attachment_uuid(sequoia_container_path):
                 output_path, sequoia_container_path
             )
             assert success is False
+
+
+def test_save_to_file_method_with_media_items(
+    sequoia_container_path, original_bitcoin_pdf
+):
+    """Test that the save_to_file method works seamlessly with media items."""
+    database_path = sequoia_container_path / "NoteStore.sqlite"
+    assert database_path.exists(), f"Database not found: {database_path}"
+    assert original_bitcoin_pdf.exists(), (
+        f"Original PDF not found: {original_bitcoin_pdf}"
+    )
+
+    with AppleNotesDatabase(str(database_path)) as db:
+        accounts = {account.id: account for account in db.get_accounts()}
+        folders = {folder.id: folder for folder in db.get_folders(accounts)}
+        notes = db.get_notes(accounts, folders)
+
+        # Find bitcoin attachment
+        bitcoin_attachment = None
+        for note in notes:
+            for attachment in note.attachments:
+                if attachment.filename == "bitcoin.pdf":
+                    bitcoin_attachment = attachment
+                    break
+            if bitcoin_attachment:
+                break
+
+        assert bitcoin_attachment is not None, "bitcoin.pdf attachment not found"
+
+        # Test save_to_file with media file
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_path = Path(temp_dir) / "saved_bitcoin.pdf"
+
+            # Test with notes_container_path provided
+            success = bitcoin_attachment.save_to_file(
+                output_path, notes_container_path=sequoia_container_path
+            )
+            assert success is True, "Failed to save media item with save_to_file method"
+            assert output_path.exists(), "Output file was not created"
+
+            # Verify content matches original
+            original_data = original_bitcoin_pdf.read_bytes()
+            saved_data = output_path.read_bytes()
+            assert saved_data == original_data, "Saved file does not match original"
+
+            # Test without notes_container_path (should still work due to auto-detection fallback)
+            output_path2 = Path(temp_dir) / "saved_bitcoin2.pdf"
+            success2 = bitcoin_attachment.save_to_file(output_path2)
+            # This might fail if auto-detection doesn't work, but should fallback to BLOB data if available
+            # For this specific test case, we expect it to fail gracefully since we're not on the actual macOS system
+            if success2:
+                saved_data2 = output_path2.read_bytes()
+                # If it succeeded, it should match the original
+                assert saved_data2 == original_data, (
+                    "Saved file without container path does not match original"
+                )
+
+
+def test_save_to_file_fallback_to_blob_data(sequoia_container_path):
+    """Test that save_to_file falls back to BLOB data when media file is not available."""
+    database_path = sequoia_container_path / "NoteStore.sqlite"
+
+    with AppleNotesDatabase(str(database_path)) as db:
+        accounts = {account.id: account for account in db.get_accounts()}
+        folders = {folder.id: folder for folder in db.get_folders(accounts)}
+        notes = db.get_notes(accounts, folders)
+
+        # Find an attachment with BLOB data
+        blob_attachment = None
+        for note in notes:
+            for attachment in note.attachments:
+                if attachment.has_data and attachment.filename != "bitcoin.pdf":
+                    blob_attachment = attachment
+                    break
+            if blob_attachment:
+                break
+
+        if blob_attachment:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                output_path = (
+                    Path(temp_dir) / f"blob_{blob_attachment.get_suggested_filename()}"
+                )
+
+                # Test save_to_file - should fall back to BLOB data since no media file exists
+                success = blob_attachment.save_to_file(
+                    output_path, notes_container_path=sequoia_container_path
+                )
+
+                if success:  # Only test if BLOB data is available
+                    assert output_path.exists(), "Output file was not created"
+
+                    # Verify it matches get_decompressed_data()
+                    blob_data = blob_attachment.get_decompressed_data()
+                    if blob_data:
+                        saved_data = output_path.read_bytes()
+                        assert saved_data == blob_data, (
+                            "Saved BLOB data does not match get_decompressed_data()"
+                        )

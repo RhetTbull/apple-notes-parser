@@ -243,12 +243,22 @@ class Attachment:
 
         return raw_data
 
-    def save_to_file(self, output_path: str | Path, decompress: bool = True) -> bool:
+    def save_to_file(
+        self,
+        output_path: str | Path,
+        decompress: bool = True,
+        notes_container_path: str | Path | None = None,
+    ) -> bool:
         """Save attachment data to a file.
+
+        Attempts to save media file data first (if available), then falls back to BLOB data.
+        This method now seamlessly handles both media items stored on disk and BLOB data
+        stored in the database.
 
         Args:
             output_path: Path where the attachment should be saved.
             decompress: If True, automatically decompress gzipped data. Defaults to True.
+            notes_container_path: Path to Apple Notes container. If None, attempts to find automatically.
 
         Returns:
             bool: True if save was successful, False if no data available.
@@ -257,6 +267,24 @@ class Attachment:
             IOError: If file writing fails.
             PermissionError: If insufficient permissions to write file.
         """
+        output_path = Path(output_path)
+
+        # Create parent directories if they don't exist
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # First try to copy from media file (more efficient for large files)
+        media_path = self.get_media_file_path(notes_container_path)
+        if media_path and media_path.exists():
+            try:
+                import shutil
+
+                shutil.copy2(media_path, output_path)
+                return True
+            except OSError:
+                # Fall through to BLOB data if media file copy fails
+                pass
+
+        # Fall back to BLOB data
         if decompress:
             data = self.get_decompressed_data()
         else:
@@ -264,11 +292,6 @@ class Attachment:
 
         if not data:
             return False
-
-        output_path = Path(output_path)
-
-        # Create parent directories if they don't exist
-        output_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Write data to file
         with open(output_path, "wb") as f:
