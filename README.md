@@ -25,17 +25,13 @@ See also my companion project [macnotesapp](https://github.com/rhettbull/macnote
 ### Using uv (recommended)
 
 ```bash
-git clone <this-repository>
-cd apple-notes-parser
-uv sync
+uv pip install apple-notes-parser
 ```
 
 ### Using pip
 
 ```bash
-git clone <this-repository>
-cd apple-notes-parser
-pip install -e .
+pip install apple-notes-parser
 ```
 
 ## Quick Start
@@ -361,7 +357,7 @@ For development and building, you need:
 
 1. **Clone the repository:**
    ```bash
-   git clone <this-repository>
+   git clone git@github.com:RhetTbull/apple-notes-parser.git
    cd apple-notes-parser
    ```
 
@@ -579,3 +575,5 @@ This library builds upon the excellent work from:
 - [threeplanetssoftware/apple_cloud_notes_parser](https://github.com/threeplanetssoftware/apple_cloud_notes_parser) - Ruby implementation and protobuf definitions
 - [HamburgChimps/apple-notes-liberator](https://github.com/HamburgChimps/apple-notes-liberator) - Java implementation
 - [Ciofeca Forensics](https://ciofecaforensics.com/) - Technical research on Apple Notes storage format
+
+This project was built with assistance of AI, specifically using [Claude Code](https://www.anthropic.com/claude-code)

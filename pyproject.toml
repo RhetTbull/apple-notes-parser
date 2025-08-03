@@ -4,16 +4,16 @@ build-backend = "hatchling.build"
 
 [project]
 name = "apple-notes-parser"
-version = "0.1.0"
+version = "0.2.0"
 description = "A Python library for reading and parsing Apple Notes SQLite databases with comprehensive CLI tools"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
-    {name = "Rhet Turnbull", email = "rturnbull+applnotes@gmail.com"},
+    {name = "Rhet Turnbull", email = "rturnbull+git@gmail.com"},
 ]
 maintainers = [
-    {name = "Rhet Turnbull", email = "rturnbull+applnotes@gmail.com"},
+    {name = "Rhet Turnbull", email = "rturnbull+git@gmail.com"},
 ]
 keywords = [
     "apple",
