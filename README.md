@@ -72,6 +72,68 @@ The Apple Notes database is typically located at:
 ~/Library/Group Containers/group.com.apple.notes/NoteStore.sqlite
 ```
 
+## Command Line Interface (CLI)
+
+The package includes a simpl command-line interface for working with Apple Notes databases without writing any code. The CLI provides access to all major functionality including listing notes, searching, exporting data, and analyzing attachments.
+
+### Installation and Access
+
+After installing the package, the CLI is available as `apple-notes-parser`:
+
+```bash
+# Install from PyPI
+pip install apple-notes-parser
+
+# Use the CLI
+apple-notes-parser --help
+```
+
+### CLI Commands Overview
+
+The CLI provides several commands for different use cases:
+
+- **`list`** - List and filter notes
+- **`search`** - Search notes by text content
+- **`export`** - Export notes to JSON format
+- **`stats`** - Show database statistics and summary
+- **`attachments`** - List and extract attachments
+- **`tags`** - Analyze and list hashtags
+
+### Global Options
+
+All commands support these global options:
+
+```bash
+apple-notes-parser [--database PATH] [--version] COMMAND [OPTIONS]
+```
+
+- `--database`, `-d` - Path to NoteStore.sqlite file (auto-detected if not specified)
+- `--version` - Show version information
+- `--help` - Show help message
+
+### CLI Usage Examples
+
+**Quick Database Overview:**
+```bash
+apple-notes-parser stats --verbose
+```
+
+**Find Work-Related Notes:**
+```bash
+apple-notes-parser list --folder "Work" --tag "urgent"
+```
+
+**Find Notes About Specific Topic:**
+```bash
+apple-notes-parser search "budget meeting" --content
+```
+
+**Custom Database Path:**
+```bash
+# Use specific database file
+apple-notes-parser --database /path/to/custom/NoteStore.sqlite stats
+```
+
 ## API Reference
 
 ### Main Parser Class
