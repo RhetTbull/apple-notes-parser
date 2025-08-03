@@ -128,6 +128,11 @@ apple-notes-parser list --folder "Work" --tag "urgent"
 apple-notes-parser search "budget meeting" --content
 ```
 
+**Save all images from notes**
+```bash
+apple-notes-parser attachments --type image  --save ./images
+```
+
 **Custom Database Path:**
 ```bash
 # Use specific database file

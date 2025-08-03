@@ -373,11 +373,13 @@ class Attachment:
 
         # If UUID-based search failed and we have a filename, search by filename
         if self.filename:
+            # Extract just the basename to avoid issues with path separators in rglob
+            filename_basename = Path(self.filename).name
             for account_folder in account_folders:
                 media_base = account_folder / "Media"
                 if media_base.exists():
                     # Search all media directories for the filename
-                    for item in media_base.rglob(self.filename):
+                    for item in media_base.rglob(filename_basename):
                         if item.is_file():
                             return item
 
