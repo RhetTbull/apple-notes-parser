@@ -2,6 +2,10 @@
 
 A Python library for reading and parsing Apple Notes SQLite databases. This library extracts data from Apple Notes SQLite stores, including support for reading tags on notes and finding notes that have specific tags.
 
+This is a python implementation of some of the functionality found in [Apple Cloud Notes Parser](https://github.com/threeplanetssoftware/apple_cloud_notes_parser). If you can use Ruby and need a more full featured solution, I recommend trying Apple Cloud Notes Parser.
+
+See also my companion project [macnotesapp](https://github.com/rhettbull/macnotesapp) which uses AppleScript to interact with the Notes app including creating and modifying notes. Apple Notes Parser only supports reading and parsing Apple Notes databases.
+
 ## Features
 
 - **Full Database Parsing**: Read all accounts, folders, and notes from Apple Notes databases
@@ -266,43 +270,12 @@ metadata_only = parser.export_notes_to_dict(include_content=False)
 
 ## Technical Details
 
-### Protobuf Parsing
-
-The library uses Protocol Buffers to parse compressed note data. It can handle:
-
-- Modern Notes format (macOS 10.11+) with gzipped protobuf data
-- Legacy Notes format (pre-macOS 10.11) with plain text
-- Automatic fallback when protobuf parsing fails
-
-### Database Schema Detection
-
-Automatically detects macOS version based on database schema:
-
-- macOS 15 (Sequoia): `ZUNAPPLIEDENCRYPTEDRECORDDATA` column
-- macOS 14 (Sonoma): `ZSUPPORTSV1NEO` column
-- macOS 13 (Ventura): `ZGENERATION` column
-- macOS 12 (Monterey): `ZACCOUNT6` column
-- macOS 11 (Big Sur): `ZACCOUNT5` column
-- macOS 10.15 (Catalina): `ZLASTOPENEDDATE` column
-- macOS 10.14 (Mojave): `ZACCOUNT4` column
-- macOS 10.13 (High Sierra): `ZSERVERRECORDDATA` column
-- macOS 10.12 (Sierra): `Z_11NOTES` table
-- Legacy: Different table structure
-
-### Tag Extraction
-
-Tags are extracted from note content using regex patterns:
-
-- Hashtags: `#(\w+)` - matches #work, #important, etc.
-- Mentions: `@(\w+)` - matches @john, @team, etc.
-- Links: Full URL pattern matching
+The library uses Protocol Buffers to parse compressed note data. See [Revisiting Apple Notes (6): The Protobuf](https://ciofecaforensics.com/2020/09/18/apple-notes-revisited-protobuf/) for more details about how Apple Notes stores data.
 
 ## Limitations
 
 - **Encrypted Notes**: Password-protected notes cannot be decrypted without the password
-- **Attachment Files**: Binary attachment files are not extracted from the database, only metadata is available
 - **Rich Formatting**: Complex formatting information is not fully preserved in plain text output
-- **Deleted Notes**: Notes in trash/recently deleted are not accessible through this library
 
 ## Development and Building
 
@@ -310,11 +283,11 @@ Tags are extracted from note content using regex patterns:
 
 For using the library (end users), you only need:
 - Python 3.11+
-- Dependencies are automatically installed via `uv` or `pip`
+- Dependencies are automatically installed via `uv`:
 
 For development and building, you need:
 - Python 3.11+
-- `uv` package manager (recommended) or `pip`
+- `uv` package manager (recommended)
 - Development dependencies including `grpcio-tools` (for protobuf code generation, if needed)
 
 ### Development Setup
@@ -327,12 +300,7 @@ For development and building, you need:
 
 2. **Install in development mode with uv (recommended):**
    ```bash
-   uv sync --dev
-   ```
-
-3. **Or install with pip:**
-   ```bash
-   pip install -e ".[dev]"
+   uv sync --all-extras
    ```
 
 ### Running Tests
@@ -342,9 +310,6 @@ The project includes a comprehensive test suite with 54+ tests:
 ```bash
 # Run all tests
 uv run pytest
-
-# Run tests with verbose output
-uv run pytest -v
 
 # Run specific test file
 uv run pytest tests/test_real_database.py
@@ -375,6 +340,12 @@ uv run ruff format src/
 uv run ruff check --select I src/
 ```
 
+The script `./check` in the project root directory is a convenient wrapper for running all linting and formatting checks and automatically fixing safe issues:
+
+```bash
+uv run ./check --verbose
+```
+
 #### Running MyPy (Type Checking)
 
 [MyPy](https://mypy.readthedocs.io/) is used for static type checking:
@@ -395,57 +366,8 @@ uv run mypy src/apple_notes_parser/parser.py
 Before submitting code, run the complete quality check using our automated scripts:
 
 ```bash
-# Option 1: Quick entry point from project root
 ./check
-
-# Option 2: Use the comprehensive Python script directly
-python scripts/check_code_quality.py
-
-# Option 3: Use the simple shell script
-./scripts/check.sh
-
-# Include tests in the quality check
-python scripts/check_code_quality.py --with-tests
-./scripts/check.sh --with-tests
-
-# Only run checks without auto-fixing
-python scripts/check_code_quality.py --check-only
-
-# Only run auto-fixing tools
-python scripts/check_code_quality.py --fix-only
-
-# Show detailed output from all tools
-python scripts/check_code_quality.py --verbose
 ```
-
-**Script Features:**
-- **`./check`**: Quick entry point from project root (same as running the Python script)
-- **`scripts/check_code_quality.py`**: Comprehensive Python script with options for different workflows
-- **`scripts/check.sh`**: Simple shell script for quick checks
-- All scripts automatically detect and use `uv` if available
-- Proper error handling and reporting
-- Optional test execution
-- Flexible modes (check-only, fix-only, etc.)
-
-**Manual workflow** (if you prefer to run commands individually):
-
-```bash
-# Run all quality checks manually
-uv run ruff check src/ --fix      # Auto-fix linting issues
-uv run ruff format src/           # Format code
-uv run ruff check src/            # Verify no remaining issues
-uv run mypy src/apple_notes_parser/  # Type checking
-uv run pytest                    # Run tests
-```
-
-#### Configuration
-
-The linting and type checking are configured in `pyproject.toml`:
-
-- **Ruff**: Configured for Python 3.11+ with automatic import sorting
-- **MyPy**: Strict type checking with proper overrides for generated protobuf files
-- **Line length**: Ignored to allow natural code formatting
-- **Exception handling**: Defensive patterns are allowed (bare `except` and custom exception chains)
 
 ### Protobuf Code Generation
 
@@ -455,18 +377,11 @@ The linting and type checking are configured in `pyproject.toml`:
 - You're updating to a newer protobuf version
 - You encounter protobuf version compatibility warnings
 
-#### When to Regenerate Protobuf Files
-
-If you see warnings like:
-```
-UserWarning: Protobuf gencode version X.X.X is exactly one major version older than the runtime version Y.Y.Y
-```
-
 #### How to Regenerate Protobuf Files
 
 1. **Ensure you have the required development tools:**
    ```bash
-   uv sync --dev  # Install development dependencies including grpcio-tools
+   uv sync --all-extras  # Install development dependencies including grpcio-tools
    ```
 
 2. **Navigate to the protobuf source directory:**
@@ -491,38 +406,6 @@ The automated script will:
 - Regenerate the protobuf files
 - Verify the version was updated correctly
 - Run the test suite to ensure compatibility
-
-### Package Structure
-
-```
-apple-notes-parser/
-├── src/apple_notes_parser/
-│   ├── __init__.py              # Main package exports
-│   ├── parser.py                # Main AppleNotesParser class
-│   ├── database.py              # SQLite database operations
-│   ├── models.py                # Data models (Note, Folder, Account)
-│   ├── protobuf_parser.py       # Protobuf parsing logic
-│   ├── embedded_objects.py      # Hashtag/mention extraction
-│   ├── exceptions.py            # Custom exceptions
-│   ├── notestore.proto          # Protocol buffer schema (source)
-│   └── notestore_pb2.py         # Generated protobuf Python code
-├── tests/                       # Comprehensive test suite
-│   ├── conftest.py              # Pytest fixtures and configuration
-│   ├── data/                    # Test databases
-│   │   ├── NoteStore-macOS-15-Seqoia.sqlite  # Real test database
-│   │   └── Notes-macOS-15-Seqoia.txt         # Database content dump
-│   ├── test_real_database.py    # Tests using real database
-│   ├── test_version_agnostic.py # Cross-version compatibility tests
-│   └── test_*.py                # Additional test modules
-├── scripts/                     # Development and build scripts
-│   ├── check_code_quality.py    # Comprehensive code quality checker
-│   ├── check.sh                 # Simple shell script for quality checks
-│   └── regenerate_protobuf.py   # Automated protobuf regeneration
-├── check                        # Quick entry point for code quality checks
-├── pyproject.toml               # Project configuration and dependencies
-├── README.md                    # This file
-└── pytest.ini                  # Test configuration
-```
 
 ### Adding Support for New Database Versions
 
@@ -596,7 +479,7 @@ The project uses these key dependencies:
 **Test failures:**
 - Ensure you have the real test database in `tests/data/`
 - Check that your Python version is 3.11+
-- Try running `uv sync --dev` to refresh dependencies
+- Try running `uv sync --all-extras` to refresh dependencies
 
 **Import errors:**
 - Verify installation with `uv run python -c "import apple_notes_parser; print('OK')"`
@@ -611,16 +494,9 @@ Contributions are welcome! Please feel free to submit pull requests or open issu
 1. **Fork the repository** and create a feature branch
 2. **Write tests** for any new functionality
 3. **Run quality checks** before submitting:
-   ```bash
-   # Use the quick entry point (recommended)
-   ./check --with-tests
-
-   # Or run checks manually
-   uv run ruff check src/ --fix     # Linting with auto-fixes
-   uv run ruff format src/          # Formatting
-   uv run mypy src/apple_notes_parser/  # Type checking
-   uv run pytest                    # Tests
-   ```
+  ```bash
+  uv run ./check
+  ```
 4. **Follow existing code style** and patterns
 5. **Update documentation** for user-facing changes
 6. **Submit a pull request** with a clear description
